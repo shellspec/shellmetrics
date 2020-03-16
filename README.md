@@ -7,7 +7,7 @@ Shellmetrics is Cyclomatic Complexity Analyzer for shell script.
 ## Requirements
 
 Shellmetrics is written by shell script.
-It works with **bash** or **zsh** or **mksh**.
+It works with **bash**, **mksh**, **yash** or **zsh**.
 
 ## Usage
 
@@ -15,7 +15,7 @@ It works with **bash** or **zsh** or **mksh**.
 Usage: shellmetrics [options] files...
 
   -s, --shell           The path of shell to use as parser [default: bash]
-                          Supported shells: bash, zsh, mksh
+                          Supported shells: bash, mksh, yash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version

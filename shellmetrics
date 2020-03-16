@@ -23,9 +23,14 @@ SP=$(printf ' \t') && TAB=${SP#?}
 SHELL_VERSION=''
 [ "${BASH_VERSION:-}" ] && SHELL_VERSION="bash $BASH_VERSION"
 [ "${ZSH_VERSION:-}" ] && SHELL_VERSION="zsh $ZSH_VERSION"
+[ "${YASH_VERSION:-}" ] && SHELL_VERSION="yash $YASH_VERSION"
 case ${KSH_VERSION:-} in (*MIRBSD*) SHELL_VERSION="mksh $KSH_VERSION"; esac
 
-[ "${BASH_VERSION:-}" ] && INDENT="    " || INDENT="$TAB"
+case $SHELL_VERSION in
+  bash*) INDENT="    " ;;
+  yash*) INDENT="   " ;;
+  *) INDENT="$TAB"
+esac
 
 if [ "${KSH_VERSION:-}" ]; then
   putsn() { print -r -- "$1"; }
@@ -57,7 +62,7 @@ array() {
 
 array_is_empty() {
   eval "array=\$$1_array"
-  [ $((array)) -eq 0 ]
+  [ $(($array)) -eq 0 ]
 }
 
 push_array() {
@@ -74,11 +79,11 @@ push_array() {
 pop_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $((array)) -eq 0 ] && continue
+    [ $(($array)) -eq 0 ] && continue
     array=$((${array%-*}-1))-${array#*-}
     eval "$1=\$$1_array_${array%-*}"
     unset "$1_array_${array%-*}"
-    if [ $((array)) -eq 0 ]; then
+    if [ $(($array)) -eq 0 ]; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
@@ -91,11 +96,11 @@ pop_array() {
 shift_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $((array)) -eq 0 ] && continue
+    [ $(($array)) -eq 0 ] && continue
     eval "$1=\$$1_array_${array#*-}"
     unset "$1_array_${array#*-}"
     array=${array%-*}-$((${array#*-}+1))
-    if [ $((array)) -eq 0 ]; then
+    if [ $(($array)) -eq 0 ]; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
@@ -123,12 +128,12 @@ pretty() {
   while [ "$i" -lt "$1" ] && i=$((i+1)); do
     echo 'shellmetrics_function_wrapper() {'
   done
-  sed "s/\([^\$'\"()]\)\( *()\)/\1:$MARK\2/g" \
+  sed "s/\([^\$'\"()]\)\( *()\)/\1_L$MARK\2/g" \
   | awk "{i++; gsub(/$MARK/,i); print}"
   while [ "$i" -gt 0 ] && i=$((i-1)); do
     echo '}'
   done
-  echo "typeset -f shellmetrics_function_wrapper"
+  echo "typeset -fp shellmetrics_function_wrapper"
 }
 
 lex() {
@@ -158,10 +163,11 @@ parse() {
 
     while :; do
       case $current in
-        *" () " | *" () {" | *"() {"                  ) mark="*f " && break ;;
+        *" () {" | *"() {"                            ) mark="*f " && break ;;
+        *" () " | *"()"      ) [ "${next% }" = "{" ] && mark="*f " && break ;;
         "{ " | "{" | "}" | "} " | "};" | "} ;;"       ) mark="   " && break ;;
-        "(" | ")" | ") ;;" | ""                       ) mark="   " && break ;;
-        "then" | "else" | "do" | ";;"                 ) mark="   " && break ;;
+        "(" | ")" | ") ;;" | "" | *" &&" | *" ||"     ) mark="   " && break ;;
+        "then" | "else" | ";;"                        ) mark="   " && break ;;
         "("*")"*";;"                                  ) mark="* c" && break ;;
       esac
 
@@ -175,6 +181,7 @@ parse() {
         case $current in
           *" then"                                    ) mark="* c" && break ;;
           *" do"                                      ) mark="* l" && break ;;
+          "do"                                        ) mark="  l" && break ;;
           *")"                                        ) mark="  c" && break ;;
           "("*")"*                                    ) mark="* c" && break ;;
         esac
@@ -183,7 +190,6 @@ parse() {
       if [ "$cindent" -eq "$nindent" ]; then
         case $next in
           "then"                                      ) mark="* c" && break ;;
-          "do"                                        ) mark="* l" && break ;;
         esac
       fi
 
@@ -233,8 +239,8 @@ analyze() {
     esac
 
     case $mark in (*"f"*)
-      func=${line%" () "} && func=${func%" () {"} && func=${func%"() {"}
-      func=${func##*[$SP]}
+      func=${line%"()"*} && func=${func%" "} && func=${func##*[$SP]}
+      lineno=${func##*_L} && func=${func%_L*}:$lineno
       push_array indent func ccn lloc
       ccn=1 lloc=0
     esac
@@ -266,10 +272,7 @@ report() {
     printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
   done
   echo "------------------------------------------------------------------------------"
-  bash_version="${BASH_VERSION:+bash }${BASH_VERSION:-}"
-  zsh_version="${ZSH_VERSION:+zsh }${ZSH_VERSION:-}"
-  mksh_version="${KSH_VERSION:+mksh }${KSH_VERSION:-}"
-  set -- "$file_count" "$func_count" "${bash_version}${zsh_version}${mksh_version}"
+  set -- "$file_count" "$func_count" "$SHELL_VERSION"
   printf " %d file(s), %d function(s) analyzed. [%s]\n" "$@"
 
   echo
