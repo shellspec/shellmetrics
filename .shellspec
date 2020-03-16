@@ -1,0 +1,4 @@
+--require spec_helper
+--shell bash
+--quick
+--kcov-options "--include-pattern= --include-path=shellmetrics"

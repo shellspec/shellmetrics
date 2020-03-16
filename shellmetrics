@@ -1,0 +1,337 @@
+#!/bin/bash
+
+set -eu
+
+VERSION=0.1.0
+
+usage() {
+cat<<HERE
+Usage: shellmetrics [options] files...
+
+  -d, --debug
+  -h, --help
+  -v, --version
+HERE
+}
+
+MARK="@SHELLMATRICS_LINENO@"
+SP=$(printf ' \t')
+TAB=${SP#?}
+[ "${ZSH_VERSION:-}" ] && INDENT="$TAB" || INDENT="    "
+
+count() {
+  max_indent=0 line_count=0
+  while IFS= read -r line || [ "$line" ]; do
+    line=${line%%[!$SP]*} line_count=$((line_count+1))
+    max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
+  done
+  eval "$1=$line_count $2=$max_indent"
+}
+
+repeat_string() {
+  [ "$2" -gt 0 ] || return 0
+  eval "$1=\"\${$1}$3\""
+  repeat_string "$1" $(($2 - 1)) "$3"
+}
+
+array() {
+  while [ $# -gt 0 ]; do
+    eval "$1_array=0-0"
+    shift
+  done
+}
+
+array_is_empty() {
+  eval "array=\$$1_array"
+  [ $((array)) -eq 0 ]
+}
+
+push_array() {
+  while [ $# -gt 0 ]; do
+    eval "array=\${${1%%:*}_array}"
+    case $1 in
+      *:*) eval "${1%%:*}_array_${array%-*}=\${1#*:}" ;;
+      *) eval "$1_array_${array%-*}=\$$1" ;;
+    esac
+    eval "${1%%:*}_array_last=\$${1%%:*}_array_${array%-*}"
+    array=$((${array%-*}+1))-${array#*-}
+    eval "${1%%:*}_array=$array"
+    shift
+  done
+}
+
+pop_array() {
+  while [ $# -gt 0 ]; do
+    eval "array=\$${1%%:*}_array"
+    [ $((array)) -eq 0 ] && continue
+    array=$((${array%-*}-1))-${array#*-}
+    [ "${1%:}" = "$1" ] && eval "${1#*:}=\$${1%%:*}_array_${array%-*}"
+    unset "${1%%:*}_array_${array%-*}"
+    if [ $((array)) -eq 0 ]; then
+      unset "${1%%:*}_array_last"
+    else
+      eval "${1%%:*}_array_last=\$${1%%:*}_array_$((${array%-*}-1))"
+    fi
+    eval "${1%%:*}_array=$array"
+    shift
+  done
+}
+
+shift_array() {
+  while [ $# -gt 0 ]; do
+    eval "array=\$${1%%:*}_array"
+    [ $((array)) -eq 0 ] && continue
+    [ "${1%:}" = "$1" ] && eval "${1#*:}=\$${1%%:*}_array_${array#*-}"
+    unset "${1%%:*}_array_${array#*-}"
+    array=${array%-*}-$((${array#*-}+1))
+    if [ $((array)) -eq 0 ]; then
+      unset "${1%%:*}_array_last"
+    else
+      eval "${1%%:*}_array_last=\$${1%%:*}_array_$((${array%-*}-1))"
+    fi
+    eval "${1%%:*}_array=$array"
+    shift
+  done
+}
+
+peel() {
+  i=0
+  while [ "$i" -lt "$1" ] && i=$((i+1)); do
+    IFS= read -r line
+    [ "${line%"{"}" = "$line" ] && IFS= read -r line
+  done
+  set --
+  while IFS= read -r line; do
+    [ "$#" -eq "$i" ] && echo "$1" && shift
+    set -- "$@" "$line"
+  done
+}
+
+pretty() {
+  i=0
+  while [ "$i" -lt "$1" ] && i=$((i+1)); do
+    echo 'shellmetrics_function_wrapper() {'
+  done
+  sed -E "s/([^\$'\"\(\)])(\s*\(\))/\1:$MARK\2/g" \
+  | awk "{i++; gsub(/$MARK/,i); print}"
+  while [ "$i" -gt 0 ] && i=$((i-1)); do
+    echo '}'
+  done
+  echo "declare -f shellmetrics_function_wrapper"
+}
+
+lex() {
+  eval "$(pretty "$1" < "$2")" | peel "$1"
+}
+
+parse() {
+  base='' eof='' indent='' nindent=0 pindent=0 ccn=1 lloc=0
+  array indent func ccn lloc
+  repeat_string base "$1" "$INDENT" && bindent=${#base}
+
+  IFS= read -r next_line || eof=1
+  indent=${next_line%%[!$SP]*} && next=${next_line#$indent}
+  nindent=${#indent}
+
+  until [ "$eof" ]; do
+    mark="*  " current=$next current_line=$next_line cindent=$nindent
+    IFS= read -r next_line || eof=1
+
+    indent=${next_line%%[!$SP]*} && next=${next_line#$indent}
+    nindent=${#indent}
+
+    if [ "$cindent" -lt "$bindent" ]; then
+      printf '%3s|%3s|%s\n' "" "~  " "${current_line#$base}"
+      continue
+    fi
+
+    while :; do
+      case $current in
+        *" () " | *" () {"                            ) mark="*f " && break ;;
+        "{ " | "{" | "}" | "};" | "(" | ")"           ) mark="   " && break ;;
+        "then" | "do" | ";;"                          ) mark="   " && break ;;
+        "("*")"*";;"                                  ) mark="* c" && break ;;
+      esac
+
+      if [ "$next" = "" ]; then
+        case $current in
+            *")"                                      ) mark="* c" && break ;;
+        esac
+      fi
+
+      if [ "$cindent" -lt "$nindent" ]; then
+        case $current in
+          *" then"                                    ) mark="* c" && break ;;
+          *" do"                                      ) mark="* l" && break ;;
+          *")"                                        ) mark="  c" && break ;;
+          "("*")"*                                    ) mark="* c" && break ;;
+        esac
+      fi
+
+      if [ "$cindent" -eq "$nindent" ]; then
+        case $next in
+          "then"                                      ) mark="* c" && break ;;
+          "do"                                        ) mark="* l" && break ;;
+        esac
+      fi
+
+      if [ "$cindent" -lt "$pindent" ]; then
+        case $current in
+          "fi"|"fi;"|"esac"|"esac;"|"done"|"done;"    ) mark="   " && break ;;
+        esac
+      fi
+
+      break
+    done
+    pindent=$cindent
+
+    printf '%3d|%3s|%s\n' $((cindent-bindent)) "$mark" "${current_line#$base}"
+  done
+}
+
+analyze() {
+  ccn=1 lloc=0 func_array_last=0
+  array indent func ccn lloc
+  echo 0 "$2" "<begin>" "$1"
+  while IFS="|" read -r indent mark line; do
+    case $mark in (*"~"*)
+      continue
+    esac
+
+    case $line in ("}" | "};" | "} "*)
+      if [ "$indent" = "${indent_array_last:-none}" ]; then
+        echo "$ccn" "$lloc" "$func_array_last" "$1"
+        pop_array indent func ccn lloc
+      fi
+    esac
+
+    case $mark in (*"*"*)
+      lloc=$((lloc+1))
+    esac
+
+    case $mark in (*"c"* | *"l"*)
+      ccn=$((ccn+1))
+    esac
+
+    case $mark in (*"f"*)
+      func=${line%" () "} && func=${func%" () {"} && func=${func##*[$SP]}
+      push_array indent func ccn lloc
+      ccn=1 lloc=0
+    esac
+  done
+  echo "$ccn" "$lloc" "<main>" "$1"
+  echo 0 "$2" "<end>" "$1"
+}
+
+report() {
+  echo "======================================================================"
+  printf '%6s %4s  %s\n' LLOC CCN Location
+  echo "----------------------------------------------------------------------"
+  file_count=0 sloc_total=0
+  array lloc_total ccn_total func_count file sloc_total
+  while IFS=" " read -r ccn lloc func file; do
+    if [ "$func" = "<begin>" ]; then
+      lloc_total=0 ccn_total=0 func_count=0 file_count=$((file_count+1))
+      continue
+    fi
+    if [ "$func" = "<end>" ]; then
+      push_array lloc_total ccn_total func_count file sloc_total:"$lloc"
+      continue
+    fi
+    lloc_total=$((lloc_total+lloc))
+    ccn_total=$((ccn_total+ccn))
+    func_count=$((func_count+1))
+    printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
+  done
+  echo "----------------------------------------------------------------------"
+  echo "$file_count file analyzed."
+
+  echo
+
+  echo "======================================================================"
+  echo "  SLOC     LLOC      LLOC     CCN   Func   File"
+  echo " total    total       avg     avg    cnt"
+  echo "----------------------------------------------------------------------"
+  lloc_total_all=0 ccn_total_all=0 func_count_all=0 sloc_total_all=0
+  until array_is_empty file; do
+    shift_array lloc_total ccn_total func_count file sloc_total
+    lloc_total_all=$((lloc_total_all+lloc_total))
+    ccn_total_all=$((ccn_total_all+ccn_total))
+    func_count_all=$((func_count_all+func_count))
+    sloc_total_all=$((sloc_total_all+sloc_total))
+    # shellcheck disable=SC2046
+    set -- "$sloc_total" "$lloc_total" $(
+      {
+        echo "scale=2"
+        echo "$lloc_total / $func_count"
+        echo "$ccn_total / $func_count"
+      } | bc
+    ) "$func_count" "$file"
+    printf '%6d   %6d %9.2f %7.2f  %5d   %s\n' "$@"
+  done
+  echo "----------------------------------------------------------------------"
+
+  echo
+
+  echo "======================================================================"
+  echo "  SLOC     LLOC      LLOC     CCN   Func   File"
+  echo " total    total       avg     avg    cnt    cnt"
+  echo "----------------------------------------------------------------------"
+  if [ "$file_count" -gt 0 ]; then
+    # shellcheck disable=SC2046
+    set -- "$sloc_total_all" "$lloc_total_all" $(
+      {
+        echo "scale=2"
+        echo "$lloc_total_all / $func_count_all"
+        echo "$ccn_total_all / $func_count_all"
+      } | bc
+    ) "$func_count_all" "$file_count"
+    printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
+  fi
+  echo "----------------------------------------------------------------------"
+}
+
+${__SOURCED__:+return}
+
+abort() { echo "$*" >&2; exit 1; }
+unknown() { abort "unrecognized option '$1'"; }
+required() { [ $# -gt 1 ] || abort "option '$1' requires an argument"; }
+param() { eval "$1=\$$1\ \\\"\"\\\${$2}\"\\\""; }
+params() { [ "$2" -ge "$3" ] || params_ "$@"; }
+params_() { param "$1" "$2"; params "$1" $(($2 + 1)) "$3"; }
+
+DEBUG='' PARAMS=''
+
+parse_options() {
+  OPTIND=$(($# + 1))
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -d | --debug  ) DEBUG=1 ;;
+      -h | --help   ) usage; exit ;;
+      -v | --version) echo "$VERSION"; exit ;;
+      --) shift; params PARAMS $((OPTIND - $#)) $OPTIND; break ;;
+      -?*) unknown "$@" ;;
+      *) param PARAMS $((OPTIND - $#))
+    esac
+    shift
+  done
+}
+
+parse_options "$@"
+eval "set -- $PARAMS"
+
+if [ "$DEBUG" ]; then
+  analyze() {
+    echo "[$1]"
+    cat
+    echo
+  }
+  report() { cat; }
+fi
+
+for file in "$@"; do
+  max_indent=0 line_count=0
+  count line_count max_indent < "$file"
+  nest=$((max_indent / ${#INDENT} + 1))
+  lex "$nest" "$file" | parse "$nest" | analyze "$file" "$line_count"
+done | report
