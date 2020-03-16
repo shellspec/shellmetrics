@@ -163,41 +163,34 @@ parse() {
 
     while :; do
       case $current in
-        *" () {" | *"() {"                            ) mark="*f " && break ;;
-        *" () " | *"()"      ) [ "${next% }" = "{" ] && mark="*f " && break ;;
-        "{ " | "{" | "}" | "} " | "};" | "} ;;"       ) mark="   " && break ;;
-        "(" | ")" | ") ;;" | "" | *" &&" | *" ||"     ) mark="   " && break ;;
-        "then" | "else" | ";;"                        ) mark="   " && break ;;
-        "("*")"*";;"                                  ) mark="* c" && break ;;
+        *" () {" | *"() {" | *" () " | *"()"            ) mark="*f "; break ;;
+        "{ " | "{" | "}" | "} " | "};" | "} ;;" | "else") mark="   "; break ;;
+        "(" | ")" | ") ;;" | "" | *" &&" | *" ||" | ";;") mark="   "; break ;;
+        "then"                                          ) mark="  c"; break ;;
+        "("*")"*";;"                                    ) mark="* c"; break ;;
       esac
 
       if [ "$next" = "" ]; then
         case $current in
-            *")"                                      ) mark="* c" && break ;;
-        esac
+            *")"                                        ) mark="* c"; break ;;
+          esac
       fi
 
       if [ "$cindent" -lt "$nindent" ]; then
         case $current in
-          *" then"                                    ) mark="* c" && break ;;
-          *" do"                                      ) mark="* l" && break ;;
-          "do"                                        ) mark="  l" && break ;;
-          *")"                                        ) mark="  c" && break ;;
-          "("*")"*                                    ) mark="* c" && break ;;
-        esac
-      fi
-
-      if [ "$cindent" -eq "$nindent" ]; then
-        case $next in
-          "then"                                      ) mark="* c" && break ;;
+          *" then"                                      ) mark="* c"; break ;;
+          *" do"                                        ) mark="* l"; break ;;
+          "do"                                          ) mark="  l"; break ;;
+          *")"                                          ) mark="  c"; break ;;
+          "("*")"*                                      ) mark="* c"; break ;;
         esac
       fi
 
       if [ "$cindent" -lt "$pindent" ]; then
         case $current in
-          "fi"   | "fi "   | "fi;"   | "fi ;;"        ) mark="   " && break ;;
-          "esac" | "esac " | "esac;" | "esac ;;"      ) mark="   " && break ;;
-          "done" | "done " | "done;" | "done ;;"      ) mark="   " && break ;;
+          "fi"   | "fi "   | "fi;"   | "fi ;;"          ) mark="   "; break ;;
+          "esac" | "esac " | "esac;" | "esac ;;"        ) mark="   "; break ;;
+          "done" | "done " | "done;" | "done ;;"        ) mark="   "; break ;;
         esac
       fi
 
