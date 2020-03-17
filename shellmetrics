@@ -109,7 +109,7 @@ pretty() {
   while [ "$i" -lt "$1" ] && i=$((i+1)); do
     echo 'shellmetrics_function_wrapper() {'
   done
-  sed -E "s/([^\$'\"\(\)])(\s*\(\))/\1:$MARK\2/g" \
+  sed "s/\([^\$'\"()]\)\( *()\)/\1:$MARK\2/g" \
   | awk "{i++; gsub(/$MARK/,i); print}"
   while [ "$i" -gt 0 ] && i=$((i-1)); do
     echo '}'
