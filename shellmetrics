@@ -62,7 +62,7 @@ array() {
 
 array_is_empty() {
   eval "array=\$$1_array"
-  [ $(($array)) -eq 0 ]
+  [ $(("$array")) -eq 0 ]
 }
 
 push_array() {
@@ -79,11 +79,11 @@ push_array() {
 pop_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $(($array)) -eq 0 ] && continue
+    [ $(("$array")) -eq 0 ] && continue
     array=$((${array%-*}-1))-${array#*-}
     eval "$1=\$$1_array_${array%-*}"
     unset "$1_array_${array%-*}"
-    if [ $(($array)) -eq 0 ]; then
+    if [ $(("$array")) -eq 0 ]; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
@@ -96,11 +96,11 @@ pop_array() {
 shift_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $(($array)) -eq 0 ] && continue
+    [ $(("$array")) -eq 0 ] && continue
     eval "$1=\$$1_array_${array#*-}"
     unset "$1_array_${array#*-}"
     array=${array%-*}-$((${array#*-}+1))
-    if [ $(($array)) -eq 0 ]; then
+    if [ $(("$array")) -eq 0 ]; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
