@@ -48,48 +48,45 @@ array_is_empty() {
 
 push_array() {
   while [ $# -gt 0 ]; do
-    eval "array=\${${1%%:*}_array}"
-    case $1 in
-      *:*) eval "${1%%:*}_array_${array%-*}=\${1#*:}" ;;
-      *) eval "$1_array_${array%-*}=\$$1" ;;
-    esac
-    eval "${1%%:*}_array_last=\$${1%%:*}_array_${array%-*}"
+    eval "array=\${$1_array}"
+    eval "$1_array_${array%-*}=\$$1"
+    eval "$1_array_last=\$$1_array_${array%-*}"
     array=$((${array%-*}+1))-${array#*-}
-    eval "${1%%:*}_array=$array"
+    eval "$1_array=$array"
     shift
   done
 }
 
 pop_array() {
   while [ $# -gt 0 ]; do
-    eval "array=\$${1%%:*}_array"
+    eval "array=\$$1_array"
     [ $((array)) -eq 0 ] && continue
     array=$((${array%-*}-1))-${array#*-}
-    [ "${1%:}" = "$1" ] && eval "${1#*:}=\$${1%%:*}_array_${array%-*}"
-    unset "${1%%:*}_array_${array%-*}"
+    eval "$1=\$$1_array_${array%-*}"
+    unset "$1_array_${array%-*}"
     if [ $((array)) -eq 0 ]; then
-      unset "${1%%:*}_array_last"
+      unset "$1_array_last"
     else
-      eval "${1%%:*}_array_last=\$${1%%:*}_array_$((${array%-*}-1))"
+      eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
     fi
-    eval "${1%%:*}_array=$array"
+    eval "$1_array=$array"
     shift
   done
 }
 
 shift_array() {
   while [ $# -gt 0 ]; do
-    eval "array=\$${1%%:*}_array"
+    eval "array=\$$1_array"
     [ $((array)) -eq 0 ] && continue
-    [ "${1%:}" = "$1" ] && eval "${1#*:}=\$${1%%:*}_array_${array#*-}"
-    unset "${1%%:*}_array_${array#*-}"
+    eval "$1=\$$1_array_${array#*-}"
+    unset "$1_array_${array#*-}"
     array=${array%-*}-$((${array#*-}+1))
     if [ $((array)) -eq 0 ]; then
-      unset "${1%%:*}_array_last"
+      unset "$1_array_last"
     else
-      eval "${1%%:*}_array_last=\$${1%%:*}_array_$((${array%-*}-1))"
+      eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
     fi
-    eval "${1%%:*}_array=$array"
+    eval "$1_array=$array"
     shift
   done
 }
@@ -235,7 +232,8 @@ report() {
       continue
     fi
     if [ "$func" = "<end>" ]; then
-      push_array lloc_total ccn_total func_count file sloc_total:"$lloc"
+      sloc_total=$lloc
+      push_array lloc_total ccn_total func_count file sloc_total
       continue
     fi
     lloc_total=$((lloc_total+lloc))

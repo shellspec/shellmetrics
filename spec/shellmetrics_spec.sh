@@ -67,18 +67,6 @@ Describe "array"
         The variable st2_array_last should eq 4
       End
     End
-
-    Describe "when value is specified"
-      setup() {
-        array st1 st2
-        st1=1 st2=2
-      }
-      It "pushes to array specified value"
-        When call push_array st1:"test'" st2:'test"'
-        The value "$st1_array_0" should eq "test'"
-        The value "$st2_array_0" should eq 'test"'
-      End
-    End
   End
 
   Describe "pop_array()"
@@ -98,24 +86,6 @@ Describe "array"
         The variable st1_array_last should be undefined
         The value "$st2" should eq 'test"'
         The variable st2_array_last should be undefined
-      End
-    End
-
-    Describe "when variable is specified"
-      setup() {
-        array st1 st2
-        st1="test'" st2='test"'
-        push_array st1 st2
-        st1="1" st2="2"
-      }
-
-      It "pops from array to variable"
-        When call pop_array st1:v1 st2:
-        The variable v1 should eq "test'"
-        The variable st1_array_last should be undefined
-        The variable st2_array_last should be undefined
-        The value "$st1" should eq 1
-        The value "$st2" should eq 2
       End
     End
 
@@ -159,24 +129,6 @@ Describe "array"
         The variable st1_array_last should be undefined
         The value "$st2" should eq 'test"'
         The variable st2_array_last should be undefined
-      End
-    End
-
-    Describe "when variable is specified"
-      setup() {
-        array st1 st2
-        st1="test'" st2='test"'
-        push_array st1 st2
-        st1="1" st2="2"
-      }
-
-      It "shifts from array to variable"
-        When call shift_array st1:v1 st2:
-        The variable v1 should eq "test'"
-        The variable st1_array_last should be undefined
-        The variable st2_array_last should be undefined
-        The value "$st1" should eq 1
-        The value "$st2" should eq 2
       End
     End
 
