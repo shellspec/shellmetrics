@@ -144,8 +144,9 @@ parse() {
     while :; do
       case $current in
         *" () " | *" () {"                            ) mark="*f " && break ;;
-        "{ " | "{" | "}" | "};" | "(" | ")"           ) mark="   " && break ;;
-        "then" | "do" | ";;"                          ) mark="   " && break ;;
+        "{ " | "{" | "}" | "};" | "} ;;"              ) mark="   " && break ;;
+        "(" | ")" | ") ;;"                            ) mark="   " && break ;;
+        "then" | "else" | "do" | ";;"                 ) mark="   " && break ;;
         "("*")"*";;"                                  ) mark="* c" && break ;;
       esac
 
@@ -173,7 +174,9 @@ parse() {
 
       if [ "$cindent" -lt "$pindent" ]; then
         case $current in
-          "fi"|"fi;"|"esac"|"esac;"|"done"|"done;"    ) mark="   " && break ;;
+          "fi" | "fi;" | "fi ;;"                      ) mark="   " && break ;;
+          "esac" | "esac;" | "esac ;;"                ) mark="   " && break ;;
+          "done" | "done;" | "done ;;"                ) mark="   " && break ;;
         esac
       fi
 
