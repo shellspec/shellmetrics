@@ -6,17 +6,23 @@ Shellmetrics is Cyclomatic Complexity Analyzer for shell script.
 
 ## Requirements
 
-Shellmetrics is written by shell script. It works with **bash** or **zsh**.
+Shellmetrics is written by shell script.
+It works with **bash** or **zsh** or **mksh**.
 
 ## Usage
 
 ```
 Usage: shellmetrics [options] files...
 
-  -d, --debug
-  -h, --help
-  -v, --version
+  -s, --shell           The path of shell to use as parser [default: bash]
+                          Supported shells: bash, zsh, mksh
+      --[no-]color      Enable / Disable color [default: enabled]
+  -d, --debug           Display parsed data for debug instead of report
+  -v, --version         Display the version
+  -h, --help            You're looking at it
 ```
+
+Metric values ​​vary slightly depending on the shell used.
 
 ## Example
 
@@ -24,45 +30,46 @@ Shellmetrics self metrics.
 
 ```console
 $ shellmetrics ./shellmetrics
-======================================================================
+==============================================================================
   LLOC  CCN  Location
-----------------------------------------------------------------------
+------------------------------------------------------------------------------
      1    1  usage:7 ./shellmetrics
-     5    2  count:22 ./shellmetrics
-     3    1  repeat_string:31 ./shellmetrics
-     3    2  array:37 ./shellmetrics
-     2    1  array_is_empty:44 ./shellmetrics
-     9    4  push_array:49 ./shellmetrics
-    12    3  pop_array:63 ./shellmetrics
-    12    3  shift_array:80 ./shellmetrics
-     8    3  peel:97 ./shellmetrics
-     7    3  pretty:110 ./shellmetrics
-     1    1  lex:123 ./shellmetrics
-    39   20  parse:127 ./shellmetrics
-    20    8  analyze:192 ./shellmetrics
-    42    6  report:226 ./shellmetrics
-     2    1  abort:296 ./shellmetrics
-     1    1  unknown:297 ./shellmetrics
-     1    1  required:298 ./shellmetrics
-     1    1  param:299 ./shellmetrics
-     1    1  params:300 ./shellmetrics
-     2    1  params_:301 ./shellmetrics
-    14    8  parse_options:305 ./shellmetrics
+     5    2  count:36 ./shellmetrics
+     3    1  repeat_string:45 ./shellmetrics
+     3    2  array:51 ./shellmetrics
+     2    1  array_is_empty:58 ./shellmetrics
+     7    2  push_array:63 ./shellmetrics
+    11    3  pop_array:74 ./shellmetrics
+    11    3  shift_array:91 ./shellmetrics
+     8    3  peel:108 ./shellmetrics
+     7    3  pretty:121 ./shellmetrics
+     1    1  lex:134 ./shellmetrics
+    46   25  parse:138 ./shellmetrics
+    21    8  analyze:211 ./shellmetrics
+    49    6  report:246 ./shellmetrics
+     3    2  error:322 ./shellmetrics
+     2    1  abort:330 ./shellmetrics
+     1    1  unknown:335 ./shellmetrics
+     1    1  required:336 ./shellmetrics
+     1    1  param:337 ./shellmetrics
+     1    1  params:338 ./shellmetrics
+     2    1  params_:339 ./shellmetrics
+    18   11  parse_options:341 ./shellmetrics
      7    2  <main> ./shellmetrics
-----------------------------------------------------------------------
-1 file analyzed.
+------------------------------------------------------------------------------
+ 1 file(s), 23 function(s) analyzed. [bash 4.4.20(1)-release]
 
-======================================================================
+==============================================================================
   SLOC     LLOC      LLOC     CCN   Func   File
  total    total       avg     avg    cnt
-----------------------------------------------------------------------
-   337      193      8.77    3.36     22   ./shellmetrics
-----------------------------------------------------------------------
+------------------------------------------------------------------------------
+   382      211      9.17    3.56     23   ./shellmetrics
+------------------------------------------------------------------------------
 
-======================================================================
+==============================================================================
   SLOC     LLOC      LLOC     CCN   Func   File
  total    total       avg     avg    cnt    cnt
-----------------------------------------------------------------------
-   337      193      8.77    3.36     22      1
-----------------------------------------------------------------------
+------------------------------------------------------------------------------
+   382      211      9.17    3.56     23      1
+------------------------------------------------------------------------------
 ```
