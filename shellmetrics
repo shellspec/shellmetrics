@@ -15,8 +15,7 @@ HERE
 }
 
 MARK="@SHELLMATRICS_LINENO@"
-SP=$(printf ' \t')
-TAB=${SP#?}
+SP=$(printf ' \t') && TAB=${SP#?}
 [ "${ZSH_VERSION:-}" ] && INDENT="$TAB" || INDENT="    "
 
 count() {
@@ -224,11 +223,12 @@ report() {
   echo "======================================================================"
   printf '%6s %4s  %s\n' LLOC CCN Location
   echo "----------------------------------------------------------------------"
-  file_count=0 sloc_total=0
+  file_count=0
   array lloc_total ccn_total func_count file sloc_total
   while IFS=" " read -r ccn lloc func file; do
     if [ "$func" = "<begin>" ]; then
-      lloc_total=0 ccn_total=0 func_count=0 file_count=$((file_count+1))
+      lloc_total=0 ccn_total=0 func_count=0 sloc_total=0
+      file_count=$((file_count+1))
       continue
     fi
     if [ "$func" = "<end>" ]; then
@@ -319,11 +319,7 @@ parse_options "$@"
 eval "set -- $PARAMS"
 
 if [ "$DEBUG" ]; then
-  analyze() {
-    echo "[$1]"
-    cat
-    echo
-  }
+  analyze() { echo "[$1]"; cat; echo; }
   report() { cat; }
 fi
 
