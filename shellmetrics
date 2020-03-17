@@ -8,9 +8,11 @@ usage() {
 cat<<HERE
 Usage: shellmetrics [options] files...
 
-  -d, --debug
-  -h, --help
-  -v, --version
+  -s, --shell           The path of shell to use as parser [default: bash]
+      --[no-]color      Enable / Disable color [default: enabled]
+  -d, --debug           Display parsed data for debug instead of report
+  -v, --version         Display the version
+  -h, --help            You're looking at it
 HERE
 }
 
@@ -292,24 +294,35 @@ report() {
   echo "----------------------------------------------------------------------"
 }
 
-${__SOURCED__:+return}
+error() {
+  if [ "$COLOR" ]; then
+    printf '\033[2;31m%s\033[0m\n' "${*:-}" >&2
+  else
+    printf '%s\n' "${*:-}" >&2
+  fi
+}
 
-abort() { echo "$*" >&2; exit 1; }
+abort() {
+  error "$@"
+  exit 1
+}
+
 unknown() { abort "unrecognized option '$1'"; }
 required() { [ $# -gt 1 ] || abort "option '$1' requires an argument"; }
 param() { eval "$1=\$$1\ \\\"\"\\\${$2}\"\\\""; }
 params() { [ "$2" -ge "$3" ] || params_ "$@"; }
 params_() { param "$1" "$2"; params "$1" $(($2 + 1)) "$3"; }
 
-DEBUG='' PARAMS=''
-
 parse_options() {
   OPTIND=$(($# + 1))
   while [ $# -gt 0 ]; do
     case $1 in
-      -d | --debug  ) DEBUG=1 ;;
-      -h | --help   ) usage; exit ;;
-      -v | --version) echo "$VERSION"; exit ;;
+      -s | --shell    ) required "$@" && shift; SH=$1 ;;
+           --color    ) COLOR=1 ;;
+           --no-color ) COLOR='' ;;
+      -d | --debug    ) DEBUG=1 ;;
+      -h | --help     ) usage; exit ;;
+      -v | --version  ) echo "$VERSION"; exit ;;
       --) shift; params PARAMS $((OPTIND - $#)) $OPTIND; break ;;
       -?*) unknown "$@" ;;
       *) param PARAMS $((OPTIND - $#))
@@ -318,8 +331,20 @@ parse_options() {
   done
 }
 
+${__SOURCED__:+return}
+
+SH=bash DEBUG='' PARAMS=''
+[ -t 1 ] && COLOR=1 || COLOR=''
+
 parse_options "$@"
+if [ "$SH" != "-" ]; then
+  exec $SH "$0" "$@" --shell -
+fi
 eval "set -- $PARAMS"
+
+if [ "${BASH_VERSION:-}${ZSH_VERSION:-}" = "" ]; then
+  abort "Unsupported shell."
+fi
 
 if [ "$DEBUG" ]; then
   analyze() { echo "[$1]"; cat; echo; }
