@@ -9,7 +9,7 @@ cat<<HERE
 Usage: shellmetrics [options] files...
 
   -s, --shell           The path of shell to use as parser [default: bash]
-                          Supported shells: bash, zsh
+                          Supported shells: bash, zsh, mksh
       --[no-]color      Enable / Disable color [default: enabled]
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version
@@ -19,7 +19,19 @@ HERE
 
 MARK="@SHELLMATRICS_LINENO@"
 SP=$(printf ' \t') && TAB=${SP#?}
-[ "${ZSH_VERSION:-}" ] && INDENT="$TAB" || INDENT="    "
+
+SHELL_VERSION=''
+[ "${BASH_VERSION:-}" ] && SHELL_VERSION="bash $BASH_VERSION"
+[ "${ZSH_VERSION:-}" ] && SHELL_VERSION="zsh $ZSH_VERSION"
+case ${KSH_VERSION:-} in (*MIRBSD*) SHELL_VERSION="mksh $KSH_VERSION"; esac
+
+[ "${BASH_VERSION:-}" ] && INDENT="    " || INDENT="$TAB"
+
+if [ "${KSH_VERSION:-}" ]; then
+  putsn() { print -r -- "$1"; }
+else
+  putsn() { printf '%s\n' "$1"; }
+fi
 
 count() {
   max_indent=0 line_count=0
@@ -101,7 +113,7 @@ peel() {
   done
   set --
   while IFS= read -r line; do
-    [ "$#" -eq "$i" ] && printf '%s\n' "$1" && shift
+    [ "$#" -eq "$i" ] && putsn "$1" && shift
     set -- "$@" "$line"
   done
 }
@@ -116,7 +128,7 @@ pretty() {
   while [ "$i" -gt 0 ] && i=$((i-1)); do
     echo '}'
   done
-  echo "declare -f shellmetrics_function_wrapper"
+  echo "typeset -f shellmetrics_function_wrapper"
 }
 
 lex() {
@@ -140,15 +152,15 @@ parse() {
     nindent=${#indent}
 
     if [ "$cindent" -lt "$bindent" ]; then
-      printf '%3s|%3s|%s\n' "" "~  " "${current_line#$base}"
+      putsn "   |~  |${current_line#$base}"
       continue
     fi
 
     while :; do
       case $current in
-        *" () " | *" () {"                            ) mark="*f " && break ;;
-        "{ " | "{" | "}" | "};" | "} ;;"              ) mark="   " && break ;;
-        "(" | ")" | ") ;;"                            ) mark="   " && break ;;
+        *" () " | *" () {" | *"() {"                  ) mark="*f " && break ;;
+        "{ " | "{" | "}" | "} " | "};" | "} ;;"       ) mark="   " && break ;;
+        "(" | ")" | ") ;;" | ""                       ) mark="   " && break ;;
         "then" | "else" | "do" | ";;"                 ) mark="   " && break ;;
         "("*")"*";;"                                  ) mark="* c" && break ;;
       esac
@@ -177,9 +189,9 @@ parse() {
 
       if [ "$cindent" -lt "$pindent" ]; then
         case $current in
-          "fi" | "fi;" | "fi ;;"                      ) mark="   " && break ;;
-          "esac" | "esac;" | "esac ;;"                ) mark="   " && break ;;
-          "done" | "done;" | "done ;;"                ) mark="   " && break ;;
+          "fi"   | "fi "   | "fi;"   | "fi ;;"        ) mark="   " && break ;;
+          "esac" | "esac " | "esac;" | "esac ;;"      ) mark="   " && break ;;
+          "done" | "done " | "done;" | "done ;;"      ) mark="   " && break ;;
         esac
       fi
 
@@ -187,7 +199,12 @@ parse() {
     done
     pindent=$cindent
 
-    printf '%3d|%3s|%s\n' $((cindent-bindent)) "$mark" "${current_line#$base}"
+    indent_width=$((cindent-bindent))
+    case $indent_width in
+      ?) indent_width="  $indent_width" ;;
+      ??) indent_width=" $indent_width" ;;
+    esac
+    putsn "$indent_width|$mark|${current_line#$base}"
   done
 }
 
@@ -216,7 +233,8 @@ analyze() {
     esac
 
     case $mark in (*"f"*)
-      func=${line%" () "} && func=${func%" () {"} && func=${func##*[$SP]}
+      func=${line%" () "} && func=${func%" () {"} && func=${func%"() {"}
+      func=${func##*[$SP]}
       push_array indent func ccn lloc
       ccn=1 lloc=0
     esac
@@ -226,9 +244,9 @@ analyze() {
 }
 
 report() {
-  echo "======================================================================"
+  echo "=============================================================================="
   printf '%6s %4s  %s\n' LLOC CCN Location
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
   file_count=0 func_count=0
   array lloc_total ccn_total func_count file sloc_total
   while IFS=" " read -r ccn lloc func file; do
@@ -247,18 +265,19 @@ report() {
     func_count=$((func_count+1))
     printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
   done
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
   bash_version="${BASH_VERSION:+bash }${BASH_VERSION:-}"
   zsh_version="${ZSH_VERSION:+zsh }${ZSH_VERSION:-}"
-  set -- "$file_count" "$func_count" "${bash_version}${zsh_version}"
+  mksh_version="${KSH_VERSION:+mksh }${KSH_VERSION:-}"
+  set -- "$file_count" "$func_count" "${bash_version}${zsh_version}${mksh_version}"
   printf " %d file(s), %d function(s) analyzed. [%s]\n" "$@"
 
   echo
 
-  echo "======================================================================"
+  echo "=============================================================================="
   echo "  SLOC     LLOC      LLOC     CCN   Func   File"
   echo " total    total       avg     avg    cnt"
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
   lloc_total_all=0 ccn_total_all=0 func_count_all=0 sloc_total_all=0
   until array_is_empty file; do
     shift_array lloc_total ccn_total func_count file sloc_total
@@ -276,14 +295,14 @@ report() {
     ) "$func_count" "$file"
     printf '%6d   %6d %9.2f %7.2f  %5d   %s\n' "$@"
   done
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
 
   echo
 
-  echo "======================================================================"
+  echo "=============================================================================="
   echo "  SLOC     LLOC      LLOC     CCN   Func   File"
   echo " total    total       avg     avg    cnt    cnt"
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
   if [ "$file_count" -eq 0 ]; then
     set --
   else
@@ -297,7 +316,7 @@ report() {
     ) "$func_count_all" "$file_count"
   fi
   printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
-  echo "----------------------------------------------------------------------"
+  echo "------------------------------------------------------------------------------"
 }
 
 error() {
@@ -349,9 +368,7 @@ if [ "$SH" != "-" ]; then
 fi
 eval "set -- $PARAMS"
 
-if [ "${BASH_VERSION:-}${ZSH_VERSION:-}" = "" ]; then
-  abort "Unsupported shell."
-fi
+[ "$SHELL_VERSION" ] || abort "Unsupported shell."
 
 if [ "$DEBUG" ]; then
   analyze() { echo "[$1]"; cat; echo; }
