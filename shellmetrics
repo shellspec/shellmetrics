@@ -9,6 +9,7 @@ cat<<HERE
 Usage: shellmetrics [options] files...
 
   -s, --shell           The path of shell to use as parser [default: bash]
+                          Supported shells: bash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version
@@ -228,7 +229,7 @@ report() {
   echo "======================================================================"
   printf '%6s %4s  %s\n' LLOC CCN Location
   echo "----------------------------------------------------------------------"
-  file_count=0
+  file_count=0 func_count=0
   array lloc_total ccn_total func_count file sloc_total
   while IFS=" " read -r ccn lloc func file; do
     if [ "$func" = "<begin>" ]; then
@@ -247,7 +248,10 @@ report() {
     printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
   done
   echo "----------------------------------------------------------------------"
-  echo "$file_count file analyzed."
+  bash_version="${BASH_VERSION:+bash }${BASH_VERSION:-}"
+  zsh_version="${ZSH_VERSION:+zsh }${ZSH_VERSION:-}"
+  set -- "$file_count" "$func_count" "${bash_version}${zsh_version}"
+  printf " %d file(s), %d function(s) analyzed. [%s]\n" "$@"
 
   echo
 
@@ -280,7 +284,9 @@ report() {
   echo "  SLOC     LLOC      LLOC     CCN   Func   File"
   echo " total    total       avg     avg    cnt    cnt"
   echo "----------------------------------------------------------------------"
-  if [ "$file_count" -gt 0 ]; then
+  if [ "$file_count" -eq 0 ]; then
+    set --
+  else
     # shellcheck disable=SC2046
     set -- "$sloc_total_all" "$lloc_total_all" $(
       {
@@ -289,12 +295,13 @@ report() {
         echo "$ccn_total_all / $func_count_all"
       } | bc
     ) "$func_count_all" "$file_count"
-    printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
   fi
+  printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
   echo "----------------------------------------------------------------------"
 }
 
 error() {
+  sleep 0
   if [ "$COLOR" ]; then
     printf '\033[2;31m%s\033[0m\n' "${*:-}" >&2
   else
@@ -352,6 +359,7 @@ if [ "$DEBUG" ]; then
 fi
 
 for file in "$@"; do
+  [ ! -f "$file" ] && error "'$file' is not a file." && continue
   max_indent=0 line_count=0
   count line_count max_indent < "$file"
   nest=$((max_indent / ${#INDENT} + 1))
