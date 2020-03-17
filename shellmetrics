@@ -98,7 +98,7 @@ peel() {
   done
   set --
   while IFS= read -r line; do
-    [ "$#" -eq "$i" ] && echo "$1" && shift
+    [ "$#" -eq "$i" ] && printf '%s\n' "$1" && shift
     set -- "$@" "$line"
   done
 }
