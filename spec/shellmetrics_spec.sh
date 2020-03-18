@@ -363,7 +363,7 @@ Describe "report()"
 End
 
 Describe "main()"
-  Before DEBUG=1
+  Before MODE=debug
   It "parsers --shell"
     When call main spec/dummy.sh
     The line 1 of output should eq '[spec/dummy.sh]'
@@ -391,10 +391,16 @@ Describe "parse_options()"
     The variable COLOR should eq ''
   End
 
+  It "parsers --pretty"
+    BeforeCall MODE=''
+    When call parse_options --pretty
+    The variable MODE should eq "pretty"
+  End
+
   It "parsers --debug"
-    BeforeCall DEBUG=''
+    BeforeCall MODE=''
     When call parse_options --debug
-    The variable DEBUG should eq 1
+    The variable MODE should eq "debug"
   End
 
   It "parsers operands"
@@ -433,13 +439,13 @@ Describe "./shellmetrics"
   Describe "--unknown"
     It "outputs error"
       When run script ./shellmetrics --unknown
-      The error should include "unrecognized option '--unknown'"
+      The error should include "Unrecognized option '--unknown'"
       The status should be failure
     End
 
     It "outputs error with color"
       When run script ./shellmetrics --color --unknown
-      The error should include "unrecognized option '--unknown'"
+      The error should include "Unrecognized option '--unknown'"
       The status should be failure
     End
   End

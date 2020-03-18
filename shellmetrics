@@ -13,6 +13,7 @@ Usage: shellmetrics [options] files...
   -s, --shell           The path of shell to use as parser [default: bash]
                           Supported shells: bash, mksh, yash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
+  -p, --pretty          Format pretty with wrapper function(s)
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version
   -h, --help            You're looking at it
@@ -42,11 +43,12 @@ putsn() {
 
 count() {
   max_indent=0 line_count=0
+  [ "$INDENT" = "$TAB" ] && indent_width=8 || indent_width=${#INDENT}
   while IFS= read -r line || [ "$line" ]; do
     line=${line%%[!$SP]*} line_count=$((line_count+1))
     max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
   done
-  eval "$1=$line_count $2=$((max_indent / ${#INDENT}))"
+  eval "$1=$line_count $2=$((max_indent / $indent_width))"
 }
 
 repeat_string() {
@@ -128,23 +130,19 @@ peel() {
 pretty() {
   i=0
   while [ "$i" -lt "$1" ] && i=$((i+1)); do
-    echo 'shellmetrics_function_wrapper() {'
+    echo 'shellmetrics_wrapper() {'
   done
   sed "s/\([^\$'\"()]\)\( *()\)/\1_L$MARK\2/g" \
   | awk "{i++; gsub(/$MARK/,i); print}"
   while [ "$i" -gt 0 ] && i=$((i-1)); do
     echo '}'
   done
-  echo "typeset -fp shellmetrics_function_wrapper"
+  echo "typeset -fp shellmetrics_wrapper"
 }
 
 process() {
   set -- "$(($1 + 1))"
-  lex "$1" | parse "$1"
-}
-
-lex() {
-  eval "$(pretty "$1")" | peel "$1"
+  eval "$(pretty "$1")" | peel "$1" | parse "$1"
 }
 
 parse() {
@@ -322,9 +320,14 @@ report() {
 }
 
 main() {
-  if [ "$DEBUG" ]; then
+  if [ "$MODE" ]; then
     analyze() { echo "[$1]"; cat; echo; }
     report() { cat; }
+
+    if [ "$MODE" = "pretty" ]; then
+      parse() { cat; }
+      peel() { cat; }
+    fi
   fi
 
   for file in "$@"; do
@@ -349,8 +352,8 @@ abort() {
   exit 1
 }
 
-unknown() { abort "unrecognized option '$1'"; }
-required() { [ $# -gt 1 ] || abort "option '$1' requires an argument"; }
+unknown() { abort "Unrecognized option '$1'"; }
+required() { [ $# -gt 1 ] || abort "Option '$1' requires an argument"; }
 param() { eval "$1=\$$1\ \\\"\"\\\${$2}\"\\\""; }
 params() { [ "$2" -ge "$3" ] || params_ "$@"; }
 params_() { param "$1" "$2"; params "$1" $(($2 + 1)) "$3"; }
@@ -362,7 +365,8 @@ parse_options() {
       -s | --shell    ) required "$@" && shift; SH=$1 ;;
            --color    ) COLOR=1 ;;
            --no-color ) COLOR='' ;;
-      -d | --debug    ) DEBUG=1 ;;
+      -p | --pretty   ) MODE=pretty ;;
+      -d | --debug    ) MODE=debug ;;
       -h | --help     ) usage; exit ;;
       -v | --version  ) echo "$VERSION"; exit ;;
       --) shift; params PARAMS $((OPTIND - $#)) $OPTIND; break ;;
@@ -373,7 +377,7 @@ parse_options() {
   done
 }
 
-SH=bash DEBUG='' PARAMS=''
+SH=bash MODE='' PARAMS=''
 [ -t 1 ] && COLOR=1 || COLOR=''
 
 ${__SOURCED__:+return}
