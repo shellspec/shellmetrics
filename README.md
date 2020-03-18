@@ -1,4 +1,4 @@
-# shellmetrics
+# Shellmetrics
 
 Shellmetrics is Cyclomatic Complexity Analyzer for shell script.
 
@@ -8,7 +8,21 @@ Shellmetrics is Cyclomatic Complexity Analyzer for shell script.
 ## Requirements
 
 Shellmetrics is written by shell script.
-It works with **bash**, **mksh**, **yash** or **zsh**.
+One of the following shells is required: `bash`, `mksh`, `yash`, `zsh`
+
+## Installation
+
+```sh
+curl -fsSL https://git.io/shellmetrics > ~/bin/shellmetrics
+chmod +x ~/bin/shellmetrics
+```
+
+or
+
+```sh
+wget https://git.io/shellmetrics -O ~/bin/shellmetrics
+chmod +x ~/bin/shellmetrics
+```
 
 ## Usage
 
