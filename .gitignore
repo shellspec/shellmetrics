@@ -1,3 +1,4 @@
 .shellspec-quick.log
+.shellspec-local
 /coverage
 /report
