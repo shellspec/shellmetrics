@@ -44,6 +44,10 @@ Metric values ​​vary slightly depending on the shell used.
 
 Shellmetrics self metrics.
 
+- SLOC - Source lines of code
+- LLOC - Logical lines of code
+- CCN - Cyclomatic Complexity Number
+
 ```console
 $ shellmetrics ./shellmetrics
 ==============================================================================
