@@ -1,17 +1,35 @@
 Include ./shellmetrics
 
+Describe "putsn()"
+  It "puts string"
+    When call putsn "test"
+    The output should eq "test"
+  End
+
+  Context "when shell is mksh"
+    Before ': "${KSH_VERSION:=MIRBSD}"'
+    print() { echo "print command:" "$@"; }
+
+    It "puts string using print command"
+      When call putsn "test"
+      The output should eq "print command: -r -- test"
+    End
+  End
+End
+
 Describe "count()"
   Data
   #|line1
   #|        line2
   #|  line3
   #|line4    word
+  #|line5
   End
-
+  BeforeCall 'INDENT="  "'
   It "counts lines and max indent"
     When call count lines max_indent
-    The variable lines should eq 4
-    The variable max_indent should eq 8
+    The variable lines should eq 5
+    The variable max_indent should eq 4
   End
 End
 
@@ -186,6 +204,271 @@ Describe "peel()"
     It "peels wrapper functions"
       When call peel 2
       The output should eq "    line"
+    End
+  End
+End
+
+Describe "analyze()"
+  _analyze() { process 10 | analyze file 0; }
+
+  Example
+    Data
+      #|foo
+      #|bar
+    End
+
+    When call _analyze
+    The line 2 of output should eq "2 1 <main> file"
+  End
+
+  Example
+    Data
+      #|if cond; then
+      #|  :
+      #|elif cond; then
+      #|  :
+      #|else
+      #|  :
+      #|fi
+    End
+
+    When call _analyze
+    The line 2 of output should eq "5 3 <main> file"
+  End
+
+  Example
+    Data
+      #|for i; do
+      #|  :
+      #|  :
+      #|done
+    End
+
+    When call _analyze
+    The line 2 of output should eq "3 2 <main> file"
+  End
+
+  Example
+    Data
+      #|while code; do
+      #|  :
+      #|  :
+      #|done
+    End
+
+    When call _analyze
+    The line 2 of output should eq "3 2 <main> file"
+  End
+
+  Example
+    Data
+      #|case $var in
+      #|  a) : ;;
+      #|  b) ;;
+      #|esac
+    End
+
+    When call _analyze
+    The line 2 of output should eq "2 3 <main> file"
+  End
+
+  Example
+    Data
+      #|cat <<HERE
+      #|for i; do
+      #|  :
+      #|done
+      #|HERE
+    End
+
+    When call _analyze
+    The line 2 of output should eq "1 1 <main> file"
+  End
+
+  Example
+    Data
+      #|:
+      #|foo() {
+      #|    if cond; then :; fi
+      #|    if cond; then :; fi
+      #|    bar() {
+      #|        if cond; then :; fi
+      #|    }
+      #|    if cond; then :; fi
+      #|}
+      #|:
+    End
+
+    When call _analyze
+    The line 2 of output should eq "2 2 bar:5 file"
+    The line 3 of output should eq "7 4 foo:2 file"
+    The line 4 of output should eq "3 1 <main> file"
+  End
+End
+
+Describe "report()"
+  Data
+    #|123 0 <begin> script1.sh
+    #|1 7 func1:10 script1.sh
+    #|2 11 func2:20 script1.sh
+    #|3 13 func3:30 script1.sh
+    #|123 0 <end> script1.sh
+    #|456 0 <begin> script2.sh
+    #|4 17 func4:40 script2.sh
+    #|5 19 func5:50 script2.sh
+    #|6 23 func6:60 script2.sh
+    #|7 29 func7:70 script2.sh
+    #|8 31 func8:80 script2.sh
+    #|456 0 <end> script2.sh
+  End
+
+  result() {
+    %text
+    #|==============================================================================
+    #|  LLOC  CCN  Location
+    #|------------------------------------------------------------------------------
+    #|     1    7  func1:10 script1.sh
+    #|     2   11  func2:20 script1.sh
+    #|     3   13  func3:30 script1.sh
+    #|     4   17  func4:40 script2.sh
+    #|     5   19  func5:50 script2.sh
+    #|     6   23  func6:60 script2.sh
+    #|     7   29  func7:70 script2.sh
+    #|     8   31  func8:80 script2.sh
+    #|------------------------------------------------------------------------------
+    #| 2 file(s), 5 function(s) analyzed. [shell-version]
+    #|
+    #|==============================================================================
+    #|  SLOC     LLOC      LLOC     CCN   Func   File
+    #| total    total       avg     avg    cnt
+    #|------------------------------------------------------------------------------
+    #|   123        6      2.00   10.33      3   script1.sh
+    #|   456       30      6.00   23.80      5   script2.sh
+    #|------------------------------------------------------------------------------
+    #|
+    #|==============================================================================
+    #|  SLOC     LLOC      LLOC     CCN   Func   File
+    #| total    total       avg     avg    cnt    cnt
+    #|------------------------------------------------------------------------------
+    #|   579       36      4.50   18.75      8      2
+    #|------------------------------------------------------------------------------
+  }
+
+  BeforeCall "SHELL_VERSION=shell-version"
+
+  Example
+    When call report
+    The output should eq "$(result)"
+  End
+End
+
+Describe "main()"
+  Before DEBUG=1
+  It "parsers --shell"
+    When call main spec/dummy.sh
+    The line 1 of output should eq '[spec/dummy.sh]'
+    The line 2 of output should start with '  0|*  |'
+    The line 2 of output should include 'echo ok'
+  End
+End
+
+Describe "parse_options()"
+  It "parsers --shell"
+    BeforeCall SH=''
+    When call parse_options --shell sh
+    The variable SH should eq sh
+  End
+
+  It "parsers --color"
+    BeforeCall COLOR=''
+    When call parse_options --color
+    The variable COLOR should eq 1
+  End
+
+  It "parsers --color"
+    BeforeCall COLOR=1
+    When call parse_options --no-color
+    The variable COLOR should eq ''
+  End
+
+  It "parsers --debug"
+    BeforeCall DEBUG=''
+    When call parse_options --debug
+    The variable DEBUG should eq 1
+  End
+
+  It "parsers operands"
+    _parse_options() {
+      parse_options --color a -- -b
+      eval "set -- $PARAMS"
+      echo "$@"
+    }
+    When call _parse_options --color a -- -b
+    The output should eq "a -b"
+  End
+End
+
+Describe "./shellmetrics"
+  Describe "--shell"
+    It "outputs version"
+      When run script ./shellmetrics --shell echo
+      The output should end with  "--shell -"
+    End
+  End
+
+  Describe "--version"
+    It "outputs version"
+      When run script ./shellmetrics --version
+      The output should eq "$VERSION"
+    End
+  End
+
+  Describe "--help"
+    It "outputs usage"
+      When run script ./shellmetrics --help
+      The output should include "Usage"
+    End
+  End
+
+  Describe "--unknown"
+    It "outputs error"
+      When run script ./shellmetrics --unknown
+      The error should include "unrecognized option '--unknown'"
+      The status should be failure
+    End
+
+    It "outputs error with color"
+      When run script ./shellmetrics --color --unknown
+      The error should include "unrecognized option '--unknown'"
+      The status should be failure
+    End
+  End
+
+  Describe "main"
+    Intercept main
+
+    Context "when unsupported shell"
+      __main__() {
+        main() { echo "ran main"; }
+      }
+
+      It "runs main function"
+        When run source ./shellmetrics --shell -
+        The output should eq "ran main"
+      End
+    End
+
+    Context "when unsupported shell"
+      __main__() {
+        main() { echo "ran main"; }
+        SHELL_VERSION=''
+      }
+
+      It "outputs error"
+        When run source ./shellmetrics --shell -
+        The error should eq "Unsupported shell."
+        The status should be failure
+      End
     End
   End
 End

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+test || __() { :; }
+
 set -eu
 
 VERSION=0.1.0
@@ -9,7 +11,7 @@ cat<<HERE
 Usage: shellmetrics [options] files...
 
   -s, --shell           The path of shell to use as parser [default: bash]
-                          Supported shells: bash, zsh, mksh
+                          Supported shells: bash, mksh, yash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version
@@ -20,23 +22,23 @@ HERE
 MARK="@SHELLMATRICS_LINENO@"
 SP=$(printf ' \t') && TAB=${SP#?}
 
-SHELL_VERSION=''
-[ "${BASH_VERSION:-}" ] && SHELL_VERSION="bash $BASH_VERSION"
+SHELL_VERSION='' INDENT="$TAB"
+[ "${BASH_VERSION:-}" ] && SHELL_VERSION="bash $BASH_VERSION" INDENT="    "
 [ "${ZSH_VERSION:-}" ] && SHELL_VERSION="zsh $ZSH_VERSION"
-[ "${YASH_VERSION:-}" ] && SHELL_VERSION="yash $YASH_VERSION"
+[ "${YASH_VERSION:-}" ] && SHELL_VERSION="yash $YASH_VERSION" INDENT="   "
 case ${KSH_VERSION:-} in (*MIRBSD*) SHELL_VERSION="mksh $KSH_VERSION"; esac
 
-case $SHELL_VERSION in
-  bash*) INDENT="    " ;;
-  yash*) INDENT="   " ;;
-  *) INDENT="$TAB"
-esac
-
-if [ "${KSH_VERSION:-}" ]; then
-  putsn() { print -r -- "$1"; }
-else
-  putsn() { printf '%s\n' "$1"; }
-fi
+putsn() {
+  putsn() {
+     printf '%s\n' "$1"
+  }
+  if [ "${KSH_VERSION:-}" ]; then
+    putsn() {
+      print -r -- "$1"
+    }
+  fi
+  putsn "$@"
+}
 
 count() {
   max_indent=0 line_count=0
@@ -44,7 +46,7 @@ count() {
     line=${line%%[!$SP]*} line_count=$((line_count+1))
     max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
   done
-  eval "$1=$line_count $2=$max_indent"
+  eval "$1=$line_count $2=$((max_indent / ${#INDENT}))"
 }
 
 repeat_string() {
@@ -62,7 +64,7 @@ array() {
 
 array_is_empty() {
   eval "array=\$$1_array"
-  [ $(("$array")) -eq 0 ]
+  eval "[ \$(($array)) -eq 0 ]"
 }
 
 push_array() {
@@ -79,11 +81,11 @@ push_array() {
 pop_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $(("$array")) -eq 0 ] && continue
+    eval "[ \$(($array)) -eq 0 ]" && continue
     array=$((${array%-*}-1))-${array#*-}
     eval "$1=\$$1_array_${array%-*}"
     unset "$1_array_${array%-*}"
-    if [ $(("$array")) -eq 0 ]; then
+    if eval "[ \$(($array)) -eq 0 ]"; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
@@ -96,11 +98,11 @@ pop_array() {
 shift_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
-    [ $(("$array")) -eq 0 ] && continue
+    eval "[ \$(($array)) -eq 0 ]" && continue
     eval "$1=\$$1_array_${array#*-}"
     unset "$1_array_${array#*-}"
     array=${array%-*}-$((${array#*-}+1))
-    if [ $(("$array")) -eq 0 ]; then
+    if eval "[ \$(($array)) -eq 0 ]"; then
       unset "$1_array_last"
     else
       eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
@@ -136,8 +138,13 @@ pretty() {
   echo "typeset -fp shellmetrics_function_wrapper"
 }
 
+process() {
+  set -- "$(($1 + 1))"
+  lex "$1" | parse "$1"
+}
+
 lex() {
-  eval "$(pretty "$1" < "$2")" | peel "$1"
+  eval "$(pretty "$1")" | peel "$1"
 }
 
 parse() {
@@ -163,16 +170,16 @@ parse() {
 
     while :; do
       case $current in
-        *" () {" | *"() {" | *" () " | *"()"            ) mark="*f "; break ;;
+        *\ "() {" | *"() {" | *" () " | *"()"            ) mark="*f "; break ;;
         "{ " | "{" | "}" | "} " | "};" | "} ;;" | "else") mark="   "; break ;;
         "(" | ")" | ") ;;" | "" | *" &&" | *" ||" | ";;") mark="   "; break ;;
-        "then"                                          ) mark="  c"; break ;;
+        "then" | "("*")  ;;"                            ) mark="  c"; break ;;
         "("*")"*";;"                                    ) mark="* c"; break ;;
       esac
 
       if [ "$next" = "" ]; then
         case $current in
-            *")"                                        ) mark="* c"; break ;;
+            *")"                                        ) mark="  c"; break ;;
           esac
       fi
 
@@ -210,15 +217,15 @@ parse() {
 analyze() {
   ccn=1 lloc=0 func_array_last=0
   array indent func ccn lloc
-  echo 0 "$2" "<begin>" "$1"
+  echo "$2" 0 "<begin>" "$1"
   while IFS="|" read -r indent mark line; do
     case $mark in (*"~"*)
       continue
     esac
 
-    case $line in ("}" | "};" | "} "*)
+    case $line in (*"}" | *"};" | *"} "*)
       if [ "$indent" = "${indent_array_last:-none}" ]; then
-        echo "$ccn" "$lloc" "$func_array_last" "$1"
+        echo "$lloc" "$ccn" "$func_array_last" "$1"
         pop_array indent func ccn lloc
       fi
     esac
@@ -238,17 +245,17 @@ analyze() {
       ccn=1 lloc=0
     esac
   done
-  echo "$ccn" "$lloc" "<main>" "$1"
-  echo 0 "$2" "<end>" "$1"
+  echo "$lloc" "$ccn" "<main>" "$1"
+  echo "$2" 0 "<end>" "$1"
 }
 
 report() {
   echo "=============================================================================="
-  printf '%6s %4s  %s\n' LLOC CCN Location
+  echo "  LLOC  CCN  Location"
   echo "------------------------------------------------------------------------------"
   file_count=0 func_count=0
   array lloc_total ccn_total func_count file sloc_total
-  while IFS=" " read -r ccn lloc func file; do
+  while IFS=" " read -r lloc ccn func file; do
     if [ "$func" = "<begin>" ]; then
       lloc_total=0 ccn_total=0 func_count=0 sloc_total=0
       file_count=$((file_count+1))
@@ -288,7 +295,7 @@ report() {
         echo "$lloc_total / $func_count"
         echo "$ccn_total / $func_count"
       } | bc
-    ) "$func_count" "$file"
+    ) "$func_count" "$file" &&:
     printf '%6d   %6d %9.2f %7.2f  %5d   %s\n' "$@"
   done
   echo "------------------------------------------------------------------------------"
@@ -299,9 +306,8 @@ report() {
   echo "  SLOC     LLOC      LLOC     CCN   Func   File"
   echo " total    total       avg     avg    cnt    cnt"
   echo "------------------------------------------------------------------------------"
-  if [ "$file_count" -eq 0 ]; then
-    set --
-  else
+  set --
+  if [ "$file_count" -gt 0 ]; then
     # shellcheck disable=SC2046
     set -- "$sloc_total_all" "$lloc_total_all" $(
       {
@@ -309,10 +315,24 @@ report() {
         echo "$lloc_total_all / $func_count_all"
         echo "$ccn_total_all / $func_count_all"
       } | bc
-    ) "$func_count_all" "$file_count"
+    ) "$func_count_all" "$file_count" &&:
   fi
   printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
   echo "------------------------------------------------------------------------------"
+}
+
+main() {
+  if [ "$DEBUG" ]; then
+    analyze() { echo "[$1]"; cat; echo; }
+    report() { cat; }
+  fi
+
+  for file in "$@"; do
+    [ ! -f "$file" ] && error "'$file' is not a file." && continue
+    line_count=0 max_indent=0 filepath=$file
+    count line_count max_indent < "$file"
+    process "$max_indent" < "$file" | analyze "$filepath" "$line_count"
+  done | report
 }
 
 error() {
@@ -353,28 +373,17 @@ parse_options() {
   done
 }
 
-${__SOURCED__:+return}
-
 SH=bash DEBUG='' PARAMS=''
 [ -t 1 ] && COLOR=1 || COLOR=''
 
+${__SOURCED__:+return}
+
 parse_options "$@"
-if [ "$SH" != "-" ]; then
-  exec $SH "$0" "$@" --shell -
-fi
+[ "$SH" = "-" ] || exec $SH "$0" "$@" --shell -
 eval "set -- $PARAMS"
+
+__ main __
 
 [ "$SHELL_VERSION" ] || abort "Unsupported shell."
 
-if [ "$DEBUG" ]; then
-  analyze() { echo "[$1]"; cat; echo; }
-  report() { cat; }
-fi
-
-for file in "$@"; do
-  [ ! -f "$file" ] && error "'$file' is not a file." && continue
-  max_indent=0 line_count=0
-  count line_count max_indent < "$file"
-  nest=$((max_indent / ${#INDENT} + 1))
-  lex "$nest" "$file" | parse "$nest" | analyze "$file" "$line_count"
-done | report
+main "$@"
