@@ -1,0 +1,14 @@
+language: sh
+dist: bionic
+services:
+  - docker
+addons:
+  apt:
+    update: true
+before_install:
+  - sudo apt-get install -y bash mksh yash zsh
+  - curl -fsSL https://git.io/shellspec | sh -s master -y
+script:
+  - make test
+  - make check
+  - make coveralls
