@@ -1,3 +1,5 @@
+# shellcheck shell=sh disable=SC2016,SC2034
+
 Include ./shellmetrics
 
 Describe "putsn()"
@@ -60,10 +62,10 @@ Describe "array"
 
       It "pushes to array"
         When call push_array st1 st2
-        The value "$st1_array_0" should eq "test'"
-        The value "$st1_array_last" should eq "test'"
-        The value "$st2_array_0" should eq 'test"'
-        The value "$st2_array_last" should eq 'test"'
+        The variable st1_array_0 should eq "test'"
+        The variable st1_array_last should eq "test'"
+        The variable st2_array_0 should eq 'test"'
+        The variable st2_array_last should eq 'test"'
       End
     End
 
@@ -100,9 +102,9 @@ Describe "array"
 
       It "pops from array"
         When call pop_array st1 st2
-        The value "$st1" should eq "test'"
+        The variable st1 should eq "test'"
         The variable st1_array_last should be undefined
-        The value "$st2" should eq 'test"'
+        The variable st2 should eq 'test"'
         The variable st2_array_last should be undefined
       End
     End
@@ -122,9 +124,9 @@ Describe "array"
 
       It "pops from array"
         When call pop_array st1 st2
-        The value "$st1" should eq "test2'"
+        The variable st1 should eq "test2'"
         The variable st1_array_last should eq "test'"
-        The value "$st2" should eq 'test2"'
+        The variable st2 should eq 'test2"'
         The variable st2_array_last should eq 'test"'
       End
     End
@@ -143,9 +145,9 @@ Describe "array"
 
       It "shifts from array"
         When call shift_array st1 st2
-        The value "$st1" should eq "test'"
+        The variable st1 should eq "test'"
         The variable st1_array_last should be undefined
-        The value "$st2" should eq 'test"'
+        The variable st2 should eq 'test"'
         The variable st2_array_last should be undefined
       End
     End
@@ -165,9 +167,9 @@ Describe "array"
 
       It "shifts from array"
         When call shift_array st1 st2
-        The value "$st1" should eq "test'"
+        The variable st1 should eq "test'"
         The variable st1_array_last should eq "test2'"
-        The value "$st2" should eq 'test"'
+        The variable st2 should eq 'test"'
         The variable st2_array_last should eq 'test2"'
       End
     End

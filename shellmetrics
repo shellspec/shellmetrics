@@ -48,7 +48,7 @@ count() {
     line=${line%%[!$SP]*} line_count=$((line_count+1))
     max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
   done
-  eval "$1=$line_count $2=$((max_indent / $indent_width))"
+  eval "$1=$line_count $2=$((max_indent / indent_width))"
 }
 
 repeat_string() {
