@@ -1,13 +1,13 @@
-# Shellmetrics
+# ShellMetrics
 
-Shellmetrics is Cyclomatic Complexity Analyzer for shell script.
+ShellMetrics is Cyclomatic Complexity Analyzer for shell script.
 
 [![Travis CI](https://img.shields.io/travis/com/shellspec/shellmetrics/master.svg?label=TravisCI&style=flat-square)](https://travis-ci.com/shellspec/shellmetrics)
 [![Coveralls](https://img.shields.io/coveralls/github/shellspec/shellmetrics.svg?label=Coveralls&style=flat-square)](https://coveralls.io/github/shellspec/shellmetrics?branch=master)
 
 ## Requirements
 
-Shellmetrics is written by shell script.
+ShellMetrics is written by shell script.
 One of the following shells is required: `bash`, `mksh`, `yash`, `zsh`
 
 ## Installation
@@ -38,11 +38,11 @@ Usage: shellmetrics [options] files...
   -h, --help            You're looking at it
 ```
 
-Metric values ​​vary slightly depending on the shell used.
+Metric values vary slightly depending on the shell used.
 
 ## Example
 
-Shellmetrics self metrics.
+ShellMetrics self metrics.
 
 - SLOC - Source lines of code
 - LLOC - Logical lines of code
