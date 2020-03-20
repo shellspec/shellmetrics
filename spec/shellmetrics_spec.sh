@@ -368,7 +368,7 @@ Describe "analyze()"
   End
 End
 
-Describe "report()"
+Describe "default_report()"
   Data
     #|0 0 <begin> script1.sh|123:1:2
     #|1 7 func1:10 script1.sh
@@ -419,7 +419,45 @@ Describe "report()"
   BeforeCall "SHELL_VERSION=shell-version"
 
   Example
-    When call report
+    When call default_report
+    The output should eq "$(result)"
+  End
+End
+
+Describe "csv_report()"
+  Data
+    #|0 0 <begin> script1.sh|123:1:2
+    #|1 7 func1:10 script1.sh
+    #|2 11 func2:20 script1.sh
+    #|3 13 func3:30 script1.sh
+    #|0 0 <end> script1.sh|123:1:2
+    #|0 0 <begin> script2.sh|456:10:20
+    #|4 17 func4:40 script2.sh
+    #|5 19 func5:50 script2.sh
+    #|6 23 func6:60 script2.sh
+    #|7 29 func7:70 script2.sh
+    #|8 31 func8:80 script2.sh
+    #|0 0 <end> script2.sh|456:10:20
+  End
+
+  result() {
+    %text
+    #|0,0,"<begin>","script1.sh|123:1:2"
+    #|1,7,"func1:10","script1.sh"
+    #|2,11,"func2:20","script1.sh"
+    #|3,13,"func3:30","script1.sh"
+    #|0,0,"<end>","script1.sh|123:1:2"
+    #|0,0,"<begin>","script2.sh|456:10:20"
+    #|4,17,"func4:40","script2.sh"
+    #|5,19,"func5:50","script2.sh"
+    #|6,23,"func6:60","script2.sh"
+    #|7,29,"func7:70","script2.sh"
+    #|8,31,"func8:80","script2.sh"
+    #|0,0,"<end>","script2.sh|456:10:20"
+  }
+
+  Example
+    When call csv_report
     The output should eq "$(result)"
   End
 End
@@ -451,6 +489,12 @@ Describe "parse_options()"
     BeforeCall COLOR=1
     When call parse_options --no-color
     The variable COLOR should eq ''
+  End
+
+  It "parsers --csv"
+    BeforeCall MODE=''
+    When call parse_options --csv
+    The variable MODE should eq "csv"
   End
 
   It "parsers --pretty"

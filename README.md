@@ -32,6 +32,7 @@ Usage: shellmetrics [options] files...
   -s, --shell           The path of shell to use as parser [default: bash]
                           Supported shells: bash, mksh, yash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
+      --csv             Generate CSV output
   -p, --pretty          Format pretty with wrapper function(s)
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version

@@ -13,6 +13,7 @@ Usage: shellmetrics [options] files...
   -s, --shell           The path of shell to use as parser [default: bash]
                           Supported shells: bash, mksh, yash, zsh
       --[no-]color      Enable / Disable color [default: enabled]
+      --csv             Generate CSV output
   -p, --pretty          Format pretty with wrapper function(s)
   -d, --debug           Display parsed data for debug instead of report
   -v, --version         Display the version
@@ -266,7 +267,7 @@ analyze() {
   echo 0 0 "<end>" "$1|${2:-0}:${3:-0}:${4:-0}"
 }
 
-report() {
+default_report() {
   echo "=============================================================================="
   echo "  LLOC  CCN  Location"
   echo "------------------------------------------------------------------------------"
@@ -354,16 +355,31 @@ report() {
   echo "------------------------------------------------------------------------------"
 }
 
-main() {
-  if [ "$MODE" ]; then
-    analyze() { echo "[$1]"; cat; echo; }
-    report() { cat; }
+csv_report() {
+  while IFS=" " read -r lloc ccn func file; do
+    echo "$lloc,$ccn,\"$func\",\"$file\""
+  done
+}
 
-    if [ "$MODE" = "pretty" ]; then
+main() {
+  case $MODE in
+    default)
+      report() { default_report "$@"; }
+      ;;
+    csv)
+      report() { csv_report "$@"; }
+      ;;
+    debug)
+      analyze() { echo "[$1]"; cat; echo; }
+      report() { cat; }
+      ;;
+    pretty)
+      analyze() { echo "[$1]"; cat; echo; }
+      report() { cat; }
       parse() { cat; }
       peel() { cat; }
-    fi
-  fi
+      ;;
+  esac
 
   for file in "$@"; do
     [ ! -f "$file" ] && error "'$file' is not a file." && continue
@@ -402,6 +418,7 @@ parse_options() {
       -s | --shell    ) required "$@" && shift; SH=$1 ;;
            --color    ) COLOR=1 ;;
            --no-color ) COLOR='' ;;
+           --csv      ) MODE=csv ;;
       -p | --pretty   ) MODE=pretty ;;
       -d | --debug    ) MODE=debug ;;
       -h | --help     ) usage; exit ;;
@@ -414,7 +431,7 @@ parse_options() {
   done
 }
 
-SH=bash MODE='' PARAMS=''
+SH=bash MODE=default PARAMS=''
 [ -t 1 ] && COLOR=1 || COLOR=''
 
 ${__SOURCED__:+return}
