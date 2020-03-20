@@ -450,18 +450,19 @@ Describe "csv_report()"
 
   result() {
     %text
-    #|0,0,"<begin>","script1.sh|123:1:2"
-    #|1,7,"func1:10","script1.sh"
-    #|2,11,"func2:20","script1.sh"
-    #|3,13,"func3:30","script1.sh"
-    #|0,0,"<end>","script1.sh|123:1:2"
-    #|0,0,"<begin>","script2.sh|456:10:20"
-    #|4,17,"func4:40","script2.sh"
-    #|5,19,"func5:50","script2.sh"
-    #|6,23,"func6:60","script2.sh"
-    #|7,29,"func7:70","script2.sh"
-    #|8,31,"func8:80","script2.sh"
-    #|0,0,"<end>","script2.sh|456:10:20"
+    #|file,func,lineno,lloc,ccn,lines,comment,blank
+    #|"script1.sh","<begin>",0,0,0,123,1,2
+    #|"script1.sh","func1",10,1,7,0,0,0
+    #|"script1.sh","func2",20,2,11,0,0,0
+    #|"script1.sh","func3",30,3,13,0,0,0
+    #|"script1.sh","<end>",0,0,0,123,1,2
+    #|"script2.sh","<begin>",0,0,0,456,10,20
+    #|"script2.sh","func4",40,4,17,0,0,0
+    #|"script2.sh","func5",50,5,19,0,0,0
+    #|"script2.sh","func6",60,6,23,0,0,0
+    #|"script2.sh","func7",70,7,29,0,0,0
+    #|"script2.sh","func8",80,8,31,0,0,0
+    #|"script2.sh","<end>",0,0,0,456,10,20
   }
 
   Example

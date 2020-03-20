@@ -360,8 +360,19 @@ default_report() {
 }
 
 csv_report() {
+  echo "file,func,lineno,lloc,ccn,lines,comment,blank"
   while IFS=" " read -r lloc ccn func file; do
-    echo "$lloc,$ccn,\"$func\",\"$file\""
+    lineno=0 lines=0 comment=0 blank=0
+    case $func in ("<begin>" | "<end>")
+      lines=${file##*"|"} && file=${file%"|"*}
+      # shellcheck disable=SC2086
+      IFS=":$IFS" && set -- $lines && IFS=${IFS#?}
+      lines=$1 comment=$2 blank=$3
+    esac
+    case $func in (*:*)
+      lineno=${func##*:} && func=${func%:*}
+    esac
+    echo "\"$file\",\"$func\",$lineno,$lloc,$ccn,$lines,$comment,$blank"
   done
 }
 
