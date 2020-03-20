@@ -1,3 +1,5 @@
+all:	test check
+
 test:
 	shellspec -s bash --no-quick
 	shellspec -s zsh --no-quick

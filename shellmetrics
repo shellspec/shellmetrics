@@ -281,6 +281,7 @@ report() {
     fi
     if [ "$func" = "<end>" ]; then
       file_metrics=${file##*"|"} && file=${file%"|"*}
+      # shellcheck disable=SC2086
       IFS=:$IFS && set -- $file_metrics && IFS=${IFS#?}
       lines_total=${1:-0} comment_total=${2:-0} blank_total=${3:-0}
       nloc_total=$((lines_total - comment_total - blank_total))
