@@ -182,15 +182,18 @@ parse() {
 
     while :; do
       case $current in
-        *\ "() {" | *"() {" | *" () " | *"()"            ) mark="*f "; break ;;
+        *\ "() {" | *"() {" | *" () " | *"()"           ) mark="*f "; break ;;
         "{ " | "{" | "}" | "} " | "};" | "} ;;" | "else") mark="   "; break ;;
         "(" | ")" | ") ;;" | "" | *" &&" | *" ||" | ";;") mark="   "; break ;;
+        "(*)  ;;"                                       ) mark="   "; break ;;
         "then" | "("*")  ;;"                            ) mark="  c"; break ;;
+        "(*)"*";;"                                      ) mark="*  "; break ;;
         "("*")"*";;"                                    ) mark="* c"; break ;;
       esac
 
       if [ "$next" = "" ]; then
         case $current in
+            "*)" | "(*)"                                ) mark="   "; break ;;
             *")"                                        ) mark="  c"; break ;;
           esac
       fi
@@ -200,6 +203,8 @@ parse() {
           *" then"                                      ) mark="* c"; break ;;
           *" do"                                        ) mark="* l"; break ;;
           "do"                                          ) mark="  l"; break ;;
+          "*)"                                          ) mark="   "; break ;;
+          "(*)"*                                        ) mark="   "; break ;;
           *")"                                          ) mark="  c"; break ;;
           "("*")"*                                      ) mark="* c"; break ;;
         esac

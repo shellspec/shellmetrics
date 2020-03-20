@@ -310,6 +310,32 @@ Describe "analyze()"
 
   Example
     Data
+      #|case $var in
+      #|  a) : ;;
+      #|  b) ;;
+      #|  *) ;;
+      #|esac
+    End
+
+    When call _analyze
+    The line 2 of output should eq "2 3 <main> file"
+  End
+
+  Example
+    Data
+      #|case $var in
+      #|  a) : ;;
+      #|  b) ;;
+      #|  *) : ;;
+      #|esac
+    End
+
+    When call _analyze
+    The line 2 of output should eq "3 3 <main> file"
+  End
+
+  Example
+    Data
       #|cat <<HERE
       #|for i; do
       #|  :
