@@ -1,8 +1,8 @@
 test:
-	shellspec -s bash
-	shellspec -s zsh
-	shellspec -s mksh
-	shellspec -s yash
+	shellspec -s bash --no-quick
+	shellspec -s zsh --no-quick
+	shellspec -s mksh --no-quick
+	shellspec -s yash --no-quick
 
 check:
 	shellcheck shellmetrics spec/shellmetrics_spec.sh
