@@ -32,6 +32,10 @@ SHELL_VERSION='' INDENT="$TAB"
 [ "${YASH_VERSION:-}" ] && SHELL_VERSION="yash $YASH_VERSION" INDENT="   "
 case ${KSH_VERSION:-} in (*MIRBSD*) SHELL_VERSION="mksh $KSH_VERSION"; esac
 
+proxy() {
+  eval "$1() { $2 \"\$@\"; }"
+}
+
 putsn() {
   putsn() {
      printf '%s\n' "$1"
@@ -204,8 +208,7 @@ parse() {
           *" then"                                      ) mark="* c"; break ;;
           *" do"                                        ) mark="* l"; break ;;
           "do"                                          ) mark="  l"; break ;;
-          "*)"                                          ) mark="   "; break ;;
-          "(*)"*                                        ) mark="   "; break ;;
+          "*)" | "(*)"*                                 ) mark="   "; break ;;
           *")"                                          ) mark="  c"; break ;;
           "("*")"*                                      ) mark="* c"; break ;;
         esac
@@ -266,6 +269,7 @@ analyze() {
   echo "$lloc" "$ccn" "<main>" "$1"
   echo 0 0 "<end>" "$1|${2:-0}:${3:-0}:${4:-0}"
 }
+
 
 default_report() {
   echo "=============================================================================="
@@ -361,25 +365,32 @@ csv_report() {
   done
 }
 
-main() {
-  case $MODE in
-    default)
-      report() { default_report "$@"; }
-      ;;
-    csv)
-      report() { csv_report "$@"; }
-      ;;
+title() {
+  echo "[$1]"
+  cat
+  echo
+}
+
+init_mode() {
+  case $1 in
+    default) proxy report default_report ;;
+    csv) proxy report csv_report ;;
     debug)
-      analyze() { echo "[$1]"; cat; echo; }
-      report() { cat; }
+      proxy analyze title
+      proxy report cat
       ;;
     pretty)
-      analyze() { echo "[$1]"; cat; echo; }
-      report() { cat; }
-      parse() { cat; }
-      peel() { cat; }
+      proxy analyze title
+      proxy report cat
+      proxy parse cat
+      proxy peel cat
       ;;
   esac
+}
+
+main() {
+  init_mode "$1"
+  shift
 
   for file in "$@"; do
     [ ! -f "$file" ] && error "'$file' is not a file." && continue
@@ -444,4 +455,4 @@ __ main __
 
 [ "$SHELL_VERSION" ] || abort "Unsupported shell."
 
-main "$@"
+main "$MODE" "$@"

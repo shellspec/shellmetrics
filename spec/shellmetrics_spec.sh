@@ -2,6 +2,14 @@
 
 Include ./shellmetrics
 
+Describe "proxy()"
+  bar() { echo "bar"; }
+  It "proxies function"
+    When call proxy foo bar
+    The result of "foo()" should eq "bar"
+  End
+End
+
 Describe "putsn()"
   It "puts string"
     When call putsn "test"
@@ -462,10 +470,40 @@ Describe "csv_report()"
   End
 End
 
+Describe "init_mode()"
+  default_report() { echo "default_report"; }
+  csv_report() { echo "csv_report"; }
+  title() { echo "title"; }
+  cat() { echo "cat"; }
+
+  It "initializes as default mode"
+    When call init_mode "default"
+    The result of "report()" should eq "default_report"
+  End
+
+  It "initializes as csv mode"
+    When call init_mode "csv"
+    The result of "report()" should eq "csv_report"
+  End
+
+  It "initializes as debug mode"
+    When call init_mode "debug"
+    The result of "analyze()" should eq "title"
+    The result of "report()" should eq "cat"
+  End
+
+  It "initializes as pretty mode"
+    When call init_mode "pretty"
+    The result of "analyze()" should eq "title"
+    The result of "report()" should eq "cat"
+    The result of "parse()" should eq "cat"
+    The result of "peel()" should eq "cat"
+  End
+End
+
 Describe "main()"
-  Before MODE=debug
   It "parsers --shell"
-    When call main spec/dummy.sh
+    When call main debug spec/dummy.sh
     The line 1 of output should eq '[spec/dummy.sh]'
     The line 2 of output should start with '  0|*  |'
     The line 2 of output should include 'echo ok'
