@@ -475,7 +475,7 @@ Describe "init_mode()"
   default_report() { echo "default_report"; }
   csv_report() { echo "csv_report"; }
   title() { echo "title"; }
-  cat() { echo "cat"; }
+  cat() { echo "cat $#"; }
 
   It "initializes as default mode"
     When call init_mode "default"
@@ -490,15 +490,15 @@ Describe "init_mode()"
   It "initializes as debug mode"
     When call init_mode "debug"
     The result of "analyze()" should eq "title"
-    The result of "report()" should eq "cat"
+    The result of "report()" should eq "cat 0"
   End
 
   It "initializes as pretty mode"
     When call init_mode "pretty"
     The result of "analyze()" should eq "title"
-    The result of "report()" should eq "cat"
-    The result of "parse()" should eq "cat"
-    The result of "peel()" should eq "cat"
+    The result of "report()" should eq "cat 0"
+    The result of "parse()" should eq "cat 0"
+    The result of "peel()" should eq "cat 0"
   End
 End
 

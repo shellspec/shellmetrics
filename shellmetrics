@@ -4,7 +4,7 @@ test || eval "__() { :; }"
 
 set -eu
 
-VERSION=0.4.1
+VERSION=0.4.3
 
 usage() {
 cat<<HERE
@@ -392,19 +392,23 @@ title() {
   echo
 }
 
+passthrough() {
+  cat
+}
+
 init_mode() {
   case $1 in
     default) proxy report default_report ;;
     csv) proxy report csv_report ;;
     debug)
       proxy analyze title
-      proxy report cat
+      proxy report passthrough
       ;;
     pretty)
       proxy analyze title
-      proxy report cat
-      proxy parse cat
-      proxy peel cat
+      proxy report passthrough
+      proxy parse passthrough
+      proxy peel passthrough
       ;;
   esac
 }
