@@ -156,7 +156,8 @@ pretty() {
   while [ "$i" -gt 0 ] && i=$((i - 1)); do
     echo '}'
   done
-  echo "typeset -fp shellmetrics_wrapper"
+  echo "typeset -fp shellmetrics_wrapper 2>/dev/null" \
+    "|| typeset -f shellmetrics_wrapper"
 }
 
 process() {

@@ -1,14 +1,24 @@
-language: sh
+language: shell
+os: linux
 dist: bionic
-services:
-  - docker
 addons:
   apt:
     update: true
+    packages: [bash, mksh, yash, zsh, shellcheck]
+  homebrew:
+    update: true
+    packages: [shellcheck]
+jobs:
+  include:
+    - os: linux
+      dist: bionic
+      env: COVERAGE=1
+      services: docker
+    - os: osx
+      osx_image: xcode11.3
 before_install:
-  - sudo apt-get install -y bash mksh yash zsh
   - curl -fsSL https://git.io/shellspec | sh -s master -y
 script:
   - make test
   - make check
-  - make coveralls
+  - if [ "$COVERAGE" ]; then make coveralls; fi
