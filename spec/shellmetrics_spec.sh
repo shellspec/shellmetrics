@@ -21,17 +21,51 @@ End
 
 Describe "count()"
   Data
-  #|line1
+  #|line1 # comment
+  #|
+  #|# comment
   #|        line2
+  #|
   #|  line3
+  #|  # comment
   #|line4    word
+  #|
   #|line5
   End
   BeforeCall 'INDENT="  "'
   It "counts lines and max indent"
-    When call count lines max_indent
-    The variable lines should eq 5
+    When call count lines comment_lines blank_lines max_indent
+    The variable lines should eq 10
+    The variable comment_lines should eq 2
+    The variable blank_lines should eq 3
     The variable max_indent should eq 4
+  End
+End
+
+Describe "is_comment_line()"
+  Parameters
+    "# comment"           success
+    "   # comment"        success
+    "    "                failure
+    "  code # comment  "  failure
+  End
+
+  It "detects comment line ($1)"
+    When call is_comment_line "$1"
+    The status should be "$2"
+  End
+End
+
+Describe "is_blank_line()"
+  Parameters
+    ""          success
+    " "         success
+    " code "    failure
+  End
+
+  It "detects blank line ($1)"
+    When call is_blank_line "$1"
+    The status should be "$2"
   End
 End
 

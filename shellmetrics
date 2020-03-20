@@ -42,13 +42,25 @@ putsn() {
 }
 
 count() {
-  max_indent=0 line_count=0
+  max_indent=0 lines=0 comment_lines=0 blank_lines=0
   [ "$INDENT" = "$TAB" ] && indent_width=8 || indent_width=${#INDENT}
   while IFS= read -r line || [ "$line" ]; do
-    line=${line%%[!$SP]*} line_count=$((line_count+1))
+    is_comment_line "$line" && comment_lines=$((comment_lines + 1))
+    is_blank_line "$line" && blank_lines=$((blank_lines + 1))
+    line=${line%%[!$SP]*} lines=$((lines+1))
     max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
   done
-  eval "$1=$line_count $2=$((max_indent / indent_width))"
+  max_indent=$((max_indent / indent_width))
+  eval "$1=$lines $2=$comment_lines $3=$blank_lines $4=$max_indent"
+}
+
+is_comment_line() {
+  set -- "$1" "${1%%#*}"
+  [ "$1" != "$2" ] && is_blank_line "$2"
+}
+
+is_blank_line() {
+  case $1 in (*[!$SP]*) false; esac
 }
 
 repeat_string() {
@@ -332,9 +344,9 @@ main() {
 
   for file in "$@"; do
     [ ! -f "$file" ] && error "'$file' is not a file." && continue
-    line_count=0 max_indent=0 filepath=$file
-    count line_count max_indent < "$file"
-    process "$max_indent" < "$file" | analyze "$filepath" "$line_count"
+    lines=0 comment_lines=0 blank_lines=0 max_indent=0 filepath=$file
+    count lines comment_lines blank_lines max_indent < "$file"
+    process "$max_indent" < "$file" | analyze "$filepath" "$lines"
   done | report
 }
 
