@@ -44,61 +44,62 @@ Metric values vary slightly depending on the shell used.
 
 ShellMetrics self metrics.
 
-- SLOC - Source lines of code
-- LLOC - Logical lines of code
-- CCN - Cyclomatic Complexity Number
+- NLOC - Non-comment Lines of Code
+- LLOC - Logical Lines of Code
+- CCN - Cyclomatic Complexity number
 
 ```console
 $ shellmetrics ./shellmetrics
 ==============================================================================
   LLOC  CCN  Location
 ------------------------------------------------------------------------------
-     1    1  __:3 ./shellmetrics
-     1    1  usage:9 ./shellmetrics
-     1    1  putsn:33 ./shellmetrics
-     1    1  putsn:37 ./shellmetrics
-     4    2  putsn:32 ./shellmetrics
-     6    2  count:44 ./shellmetrics
-     3    1  repeat_string:54 ./shellmetrics
-     3    2  array:60 ./shellmetrics
-     2    1  array_is_empty:67 ./shellmetrics
-     7    2  push_array:72 ./shellmetrics
-    11    3  pop_array:83 ./shellmetrics
-    11    3  shift_array:100 ./shellmetrics
-     8    3  peel:117 ./shellmetrics
-     7    3  pretty:130 ./shellmetrics
-     2    1  process:143 ./shellmetrics
-    57   23  parse:148 ./shellmetrics
-    21    8  analyze:215 ./shellmetrics
-    46    6  report:250 ./shellmetrics
-     3    1  analyze:324 ./shellmetrics
-     1    1  report:325 ./shellmetrics
-     1    1  parse:328 ./shellmetrics
-     1    1  peel:329 ./shellmetrics
-    12    4  main:322 ./shellmetrics
-     4    2  error:341 ./shellmetrics
-     2    1  abort:350 ./shellmetrics
-     1    1  unknown:355 ./shellmetrics
-     1    1  required:356 ./shellmetrics
-     1    1  param:357 ./shellmetrics
-     1    1  params:358 ./shellmetrics
-     2    1  params_:359 ./shellmetrics
-    19   12  parse_options:361 ./shellmetrics
-    45    2  <main> ./shellmetrics
+     1    1  usage:9 shellmetrics
+     1    1  putsn:35 shellmetrics
+     1    1  putsn:39 shellmetrics
+     4    2  putsn:34 shellmetrics
+     9    2  count:46 shellmetrics
+     2    1  is_comment_line:59 shellmetrics
+     2    2  is_blank_line:64 shellmetrics
+     3    1  repeat_string:68 shellmetrics
+     3    2  array:74 shellmetrics
+     2    1  array_is_empty:81 shellmetrics
+     7    2  push_array:86 shellmetrics
+    11    3  pop_array:97 shellmetrics
+    11    3  shift_array:114 shellmetrics
+     8    3  peel:131 shellmetrics
+     7    3  pretty:144 shellmetrics
+     2    1  process:157 shellmetrics
+    67   28  parse:162 shellmetrics
+    21    8  analyze:234 shellmetrics
+    52    6  report:269 shellmetrics
+     3    1  analyze:358 shellmetrics
+     1    1  report:359 shellmetrics
+     1    1  parse:362 shellmetrics
+     1    1  peel:363 shellmetrics
+    13    4  main:356 shellmetrics
+     4    2  error:377 shellmetrics
+     2    1  abort:386 shellmetrics
+     1    1  unknown:391 shellmetrics
+     1    1  required:392 shellmetrics
+     1    1  param:393 shellmetrics
+     1    1  params:394 shellmetrics
+     2    1  params_:395 shellmetrics
+    19   11  parse_options:397 shellmetrics
+    48    2  <main> shellmetrics
 ------------------------------------------------------------------------------
- 1 file(s), 32 function(s) analyzed. [bash 4.4.20(1)-release]
+ 1 file(s), 33 function(s) analyzed. [bash 4.4.20(1)-release]
 
 ==============================================================================
-  SLOC     LLOC      LLOC     CCN   Func   File
- total    total       avg     avg    cnt
+ NLOC    NLOC  LLOC    LLOC    CCN Func File (lines:comment:blank)
+total     avg total     avg    avg  cnt
 ------------------------------------------------------------------------------
-   393      286      8.93    2.93     32   ./shellmetrics
+  369   11.18   312    9.45   3.03   33 shellmetrics (429:3:57)
 ------------------------------------------------------------------------------
 
 ==============================================================================
-  SLOC     LLOC      LLOC     CCN   Func   File
- total    total       avg     avg    cnt    cnt
+ NLOC    NLOC  LLOC    LLOC    CCN Func File    lines comment   blank
+total     avg total     avg    avg  cnt  cnt    total   total   total
 ------------------------------------------------------------------------------
-   393      286      8.93    2.93     32      1
+  369   11.18   312    9.45   3.03   33    1        0       0       0
 ------------------------------------------------------------------------------
 ```
