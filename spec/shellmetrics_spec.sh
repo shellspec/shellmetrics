@@ -245,7 +245,7 @@ Describe "peel()"
 End
 
 Describe "analyze()"
-  _analyze() { process 10 | analyze file; }
+  _analyze() { process 10 | analyze "$@" ; }
 
   Example
     Data
@@ -253,7 +253,7 @@ Describe "analyze()"
       #|bar
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "2 1 <main> file"
   End
 
@@ -268,7 +268,7 @@ Describe "analyze()"
       #|fi
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "5 3 <main> file"
   End
 
@@ -280,7 +280,7 @@ Describe "analyze()"
       #|done
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "3 2 <main> file"
   End
 
@@ -292,7 +292,7 @@ Describe "analyze()"
       #|done
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "3 2 <main> file"
   End
 
@@ -304,7 +304,7 @@ Describe "analyze()"
       #|esac
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "2 3 <main> file"
   End
 
@@ -317,7 +317,7 @@ Describe "analyze()"
       #|esac
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "2 3 <main> file"
   End
 
@@ -330,7 +330,7 @@ Describe "analyze()"
       #|esac
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "3 3 <main> file"
   End
 
@@ -343,7 +343,7 @@ Describe "analyze()"
       #|HERE
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "1 1 <main> file"
   End
 
@@ -361,7 +361,7 @@ Describe "analyze()"
       #|:
     End
 
-    When call _analyze
+    When call _analyze file
     The line 2 of output should eq "2 2 bar:5 file"
     The line 3 of output should eq "7 4 foo:2 file"
     The line 4 of output should eq "3 1 <main> file"
