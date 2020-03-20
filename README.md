@@ -55,38 +55,38 @@ $ shellmetrics ./shellmetrics
   LLOC  CCN  Location
 ------------------------------------------------------------------------------
      1    1  usage:9 shellmetrics
-     1    1  putsn:35 shellmetrics
-     1    1  putsn:39 shellmetrics
-     4    2  putsn:34 shellmetrics
-     9    2  count:46 shellmetrics
-     2    1  is_comment_line:59 shellmetrics
-     2    2  is_blank_line:64 shellmetrics
-     3    1  repeat_string:68 shellmetrics
-     3    2  array:74 shellmetrics
-     2    1  array_is_empty:81 shellmetrics
-     7    2  push_array:86 shellmetrics
-    11    3  pop_array:97 shellmetrics
-    11    3  shift_array:114 shellmetrics
-     8    3  peel:131 shellmetrics
-     7    3  pretty:144 shellmetrics
-     2    1  process:157 shellmetrics
-    67   28  parse:162 shellmetrics
-    21    8  analyze:234 shellmetrics
-    52    6  report:269 shellmetrics
-     3    1  analyze:358 shellmetrics
-     1    1  report:359 shellmetrics
-     1    1  parse:362 shellmetrics
-     1    1  peel:363 shellmetrics
-    13    4  main:356 shellmetrics
-     4    2  error:377 shellmetrics
-     2    1  abort:386 shellmetrics
-     1    1  unknown:391 shellmetrics
-     1    1  required:392 shellmetrics
-     1    1  param:393 shellmetrics
-     1    1  params:394 shellmetrics
-     2    1  params_:395 shellmetrics
-    19   11  parse_options:397 shellmetrics
-    48    2  <main> shellmetrics
+     1    1  proxy:35 shellmetrics
+     1    1  putsn:40 shellmetrics
+     1    1  putsn:44 shellmetrics
+     4    2  putsn:39 shellmetrics
+     9    2  count:51 shellmetrics
+     2    1  is_comment_line:64 shellmetrics
+     2    2  is_blank_line:69 shellmetrics
+     3    1  repeat_string:73 shellmetrics
+     3    2  array:79 shellmetrics
+     2    1  array_is_empty:86 shellmetrics
+     7    2  push_array:91 shellmetrics
+    11    3  pop_array:102 shellmetrics
+    11    3  shift_array:119 shellmetrics
+     8    3  peel:136 shellmetrics
+     7    3  pretty:149 shellmetrics
+     2    1  process:162 shellmetrics
+    65   27  parse:167 shellmetrics
+    21    8  analyze:238 shellmetrics
+    56    6  default_report:274 shellmetrics
+    10    4  csv_report:372 shellmetrics
+     3    1  title:389 shellmetrics
+     9    5  init_mode:395 shellmetrics
+     9    2  main:412 shellmetrics
+     4    2  error:426 shellmetrics
+     2    1  abort:435 shellmetrics
+     1    1  unknown:440 shellmetrics
+     1    1  required:441 shellmetrics
+     1    1  param:442 shellmetrics
+     1    1  params:443 shellmetrics
+     2    1  params_:444 shellmetrics
+    20   12  parse_options:446 shellmetrics
+    52    2  <main> shellmetrics
 ------------------------------------------------------------------------------
  1 file(s), 33 function(s) analyzed. [bash 4.4.20(1)-release]
 
@@ -94,13 +94,13 @@ $ shellmetrics ./shellmetrics
  NLOC    NLOC  LLOC    LLOC    CCN Func File (lines:comment:blank)
 total     avg total     avg    avg  cnt
 ------------------------------------------------------------------------------
-  369   11.18   312    9.45   3.03   33 shellmetrics (429:3:57)
+  412   12.48   332   10.06   3.18   33 shellmetrics (479:5:62)
 ------------------------------------------------------------------------------
 
 ==============================================================================
  NLOC    NLOC  LLOC    LLOC    CCN Func File    lines comment   blank
 total     avg total     avg    avg  cnt  cnt    total   total   total
 ------------------------------------------------------------------------------
-  369   11.18   312    9.45   3.03   33    1        0       0       0
+  412   12.48   332   10.06   3.18   33    1      479       5      62
 ------------------------------------------------------------------------------
 ```

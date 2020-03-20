@@ -4,7 +4,7 @@ test || eval "__() { :; }"
 
 set -eu
 
-VERSION=0.4.0
+VERSION=0.4.1
 
 usage() {
 cat<<HERE
@@ -310,6 +310,7 @@ default_report() {
   echo "total     avg total     avg    avg  cnt"
   echo "------------------------------------------------------------------------------"
   lloc_total_all=0 ccn_total_all=0 func_count_all=0 nloc_total_all=0
+  lines_total_all=0 comment_total_all=0 blank_total_all=0
   until array_is_empty file; do
     shift_array lloc_total ccn_total func_count file nloc_total
     shift_array lines_total comment_total blank_total
@@ -318,6 +319,10 @@ default_report() {
     ccn_total_all=$((ccn_total_all + ccn_total))
     func_count_all=$((func_count_all + func_count))
     nloc_total_all=$((nloc_total_all + nloc_total))
+
+    lines_total_all=$((lines_total_all + lines_total))
+    comment_total_all=$((comment_total_all + comment_total))
+    blank_total_all=$((blank_total_all + blank_total))
 
     # shellcheck disable=SC2046
     set -- $(
@@ -352,8 +357,13 @@ default_report() {
         echo "$lloc_total_all"
         echo "$lloc_total_all / $func_count_all"
         echo "$ccn_total_all / $func_count_all"
+        echo "$func_count_all"
+        echo "$file_count"
+        echo "$lines_total_all"
+        echo "$comment_total_all"
+        echo "$blank_total_all"
       } | bc
-    ) "$func_count_all" "$file_count" &&:
+    ) &&:
   fi
   printf '%5d %7.2f %5d %7.2f %6.2f %4d %4d  %7d %7d %7d\n' "$@"
   echo "------------------------------------------------------------------------------"
