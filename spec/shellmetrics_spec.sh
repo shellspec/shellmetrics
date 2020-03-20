@@ -344,18 +344,18 @@ End
 
 Describe "report()"
   Data
-    #|0 0 <begin> script1.sh|123
+    #|0 0 <begin> script1.sh|123:1:2
     #|1 7 func1:10 script1.sh
     #|2 11 func2:20 script1.sh
     #|3 13 func3:30 script1.sh
-    #|0 0 <end> script1.sh|123
-    #|0 0 <begin> script2.sh|456
+    #|0 0 <end> script1.sh|123:1:2
+    #|0 0 <begin> script2.sh|456:10:20
     #|4 17 func4:40 script2.sh
     #|5 19 func5:50 script2.sh
     #|6 23 func6:60 script2.sh
     #|7 29 func7:70 script2.sh
     #|8 31 func8:80 script2.sh
-    #|0 0 <end> script2.sh|456
+    #|0 0 <end> script2.sh|456:10:20
   End
 
   result() {
@@ -375,18 +375,18 @@ Describe "report()"
     #| 2 file(s), 5 function(s) analyzed. [shell-version]
     #|
     #|==============================================================================
-    #|  SLOC     LLOC      LLOC     CCN   Func   File
-    #| total    total       avg     avg    cnt
+    #| NLOC    NLOC  LLOC    LLOC    CCN Func File (lines:comment:blank)
+    #|total     avg total     avg    avg  cnt
     #|------------------------------------------------------------------------------
-    #|   123        6      2.00   10.33      3   script1.sh
-    #|   456       30      6.00   23.80      5   script2.sh
+    #|  120   40.00     6    2.00  10.33    3 script1.sh (123:1:2)
+    #|  426   85.20    30    6.00  23.80    5 script2.sh (456:10:20)
     #|------------------------------------------------------------------------------
     #|
     #|==============================================================================
-    #|  SLOC     LLOC      LLOC     CCN   Func   File
-    #| total    total       avg     avg    cnt    cnt
+    #| NLOC    NLOC  LLOC    LLOC    CCN Func File    lines comment   blank
+    #|total     avg total     avg    avg  cnt  cnt    total   total   total
     #|------------------------------------------------------------------------------
-    #|   579       36      4.50   18.75      8      2
+    #|  546   68.25    36    4.50  18.75    8    2        0       0       0
     #|------------------------------------------------------------------------------
   }
 

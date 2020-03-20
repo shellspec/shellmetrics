@@ -49,8 +49,8 @@ count() {
   while IFS= read -r line || [ "$line" ]; do
     is_comment_line "$line" && comment_lines=$((comment_lines + 1))
     is_blank_line "$line" && blank_lines=$((blank_lines + 1))
-    line=${line%%[!$SP]*} lines=$((lines+1))
-    max_indent=$(( (${#line}>max_indent) ? ${#line} : max_indent))
+    line=${line%%[!$SP]*} lines=$((lines + 1))
+    max_indent=$(( (${#line} > max_indent) ? ${#line} : max_indent))
   done
   max_indent=$((max_indent / indent_width))
   eval "$1=$lines $2=$comment_lines $3=$blank_lines $4=$max_indent"
@@ -88,7 +88,7 @@ push_array() {
     eval "array=\${$1_array}"
     eval "$1_array_${array%-*}=\$$1"
     eval "$1_array_last=\$$1_array_${array%-*}"
-    array=$((${array%-*}+1))-${array#*-}
+    array=$((${array%-*} + 1))-${array#*-}
     eval "$1_array=$array"
     shift
   done
@@ -98,13 +98,13 @@ pop_array() {
   while [ $# -gt 0 ]; do
     eval "array=\$$1_array"
     eval "[ \$(($array)) -eq 0 ]" && continue
-    array=$((${array%-*}-1))-${array#*-}
+    array=$((${array%-*} - 1))-${array#*-}
     eval "$1=\$$1_array_${array%-*}"
     unset "$1_array_${array%-*}"
     if eval "[ \$(($array)) -eq 0 ]"; then
       unset "$1_array_last"
     else
-      eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
+      eval "$1_array_last=\$$1_array_$((${array%-*} - 1))"
     fi
     eval "$1_array=$array"
     shift
@@ -117,11 +117,11 @@ shift_array() {
     eval "[ \$(($array)) -eq 0 ]" && continue
     eval "$1=\$$1_array_${array#*-}"
     unset "$1_array_${array#*-}"
-    array=${array%-*}-$((${array#*-}+1))
+    array=${array%-*}-$((${array#*-} + 1))
     if eval "[ \$(($array)) -eq 0 ]"; then
       unset "$1_array_last"
     else
-      eval "$1_array_last=\$$1_array_$((${array%-*}-1))"
+      eval "$1_array_last=\$$1_array_$((${array%-*} - 1))"
     fi
     eval "$1_array=$array"
     shift
@@ -130,7 +130,7 @@ shift_array() {
 
 peel() {
   i=0
-  while [ "$i" -lt "$1" ] && i=$((i+1)); do
+  while [ "$i" -lt "$1" ] && i=$((i + 1)); do
     IFS= read -r line
     [ "${line%"{"}" = "$line" ] && IFS= read -r line
   done
@@ -143,12 +143,12 @@ peel() {
 
 pretty() {
   i=0
-  while [ "$i" -lt "$1" ] && i=$((i+1)); do
+  while [ "$i" -lt "$1" ] && i=$((i + 1)); do
     echo 'shellmetrics_wrapper() {'
   done
   sed "s/\([^\$'\"()]\)\( *()\)/\1_L$MARK\2/g" \
   | awk "{i++; gsub(/$MARK/,i); print}"
-  while [ "$i" -gt 0 ] && i=$((i-1)); do
+  while [ "$i" -gt 0 ] && i=$((i - 1)); do
     echo '}'
   done
   echo "typeset -fp shellmetrics_wrapper"
@@ -217,7 +217,7 @@ parse() {
     done
     pindent=$cindent
 
-    indent_width=$((cindent-bindent))
+    indent_width=$((cindent - bindent))
     case $indent_width in
       ?) indent_width="  $indent_width" ;;
       ??) indent_width=" $indent_width" ;;
@@ -243,11 +243,11 @@ analyze() {
     esac
 
     case $mark in (*"*"*)
-      lloc=$((lloc+1))
+      lloc=$((lloc + 1))
     esac
 
     case $mark in (*"c"* | *"l"*)
-      ccn=$((ccn+1))
+      ccn=$((ccn + 1))
     esac
 
     case $mark in (*"f"*)
@@ -266,23 +266,26 @@ report() {
   echo "  LLOC  CCN  Location"
   echo "------------------------------------------------------------------------------"
   file_count=0 func_count=0
-  array lloc_total ccn_total func_count file sloc_total
+  array lloc_total ccn_total func_count file nloc_total
+  array lines_total comment_total blank_total
   while IFS=" " read -r lloc ccn func file; do
     if [ "$func" = "<begin>" ]; then
-      lloc_total=0 ccn_total=0 func_count=0 sloc_total=0
-      file_count=$((file_count+1))
+      lloc_total=0 ccn_total=0 func_count=0 nloc_total=0
+      file_count=$((file_count + 1))
       continue
     fi
     if [ "$func" = "<end>" ]; then
       file_metrics=${file##*"|"} && file=${file%"|"*}
       IFS=:$IFS && set -- $file_metrics && IFS=${IFS#?}
-      sloc_total=$1
-      push_array lloc_total ccn_total func_count file sloc_total
+      lines_total=${1:-0} comment_total=${2:-0} blank_total=${3:-0}
+      nloc_total=$((lines_total - comment_total - blank_total))
+      push_array lloc_total ccn_total func_count file nloc_total
+      push_array lines_total comment_total blank_total
       continue
     fi
-    lloc_total=$((lloc_total+lloc))
-    ccn_total=$((ccn_total+ccn))
-    func_count=$((func_count+1))
+    lloc_total=$((lloc_total + lloc))
+    ccn_total=$((ccn_total + ccn))
+    func_count=$((func_count + 1))
     printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
   done
   echo "------------------------------------------------------------------------------"
@@ -292,46 +295,56 @@ report() {
   echo
 
   echo "=============================================================================="
-  echo "  SLOC     LLOC      LLOC     CCN   Func   File"
-  echo " total    total       avg     avg    cnt"
+  echo " NLOC    NLOC  LLOC    LLOC    CCN Func File (lines:comment:blank)"
+  echo "total     avg total     avg    avg  cnt"
   echo "------------------------------------------------------------------------------"
-  lloc_total_all=0 ccn_total_all=0 func_count_all=0 sloc_total_all=0
+  lloc_total_all=0 ccn_total_all=0 func_count_all=0 nloc_total_all=0
   until array_is_empty file; do
-    shift_array lloc_total ccn_total func_count file sloc_total
-    lloc_total_all=$((lloc_total_all+lloc_total))
-    ccn_total_all=$((ccn_total_all+ccn_total))
-    func_count_all=$((func_count_all+func_count))
-    sloc_total_all=$((sloc_total_all+sloc_total))
+    shift_array lloc_total ccn_total func_count file nloc_total
+    shift_array lines_total comment_total blank_total
+
+    lloc_total_all=$((lloc_total_all + lloc_total))
+    ccn_total_all=$((ccn_total_all + ccn_total))
+    func_count_all=$((func_count_all + func_count))
+    nloc_total_all=$((nloc_total_all + nloc_total))
+
     # shellcheck disable=SC2046
-    set -- "$sloc_total" "$lloc_total" $(
+    set -- $(
       {
         echo "scale=2"
+        echo "$nloc_total"
+        echo "$nloc_total / $func_count"
+        echo "$lloc_total"
         echo "$lloc_total / $func_count"
         echo "$ccn_total / $func_count"
+        echo "$func_count"
       } | bc
-    ) "$func_count" "$file" &&:
-    printf '%6d   %6d %9.2f %7.2f  %5d   %s\n' "$@"
+    ) "$file" "$lines_total" "$comment_total" "$blank_total" &&:
+    printf '%5d %7.2f %5d %7.2f %6.2f %4d %s (%d:%d:%d)\n' "$@"
   done
   echo "------------------------------------------------------------------------------"
 
   echo
 
   echo "=============================================================================="
-  echo "  SLOC     LLOC      LLOC     CCN   Func   File"
-  echo " total    total       avg     avg    cnt    cnt"
+  echo " NLOC    NLOC  LLOC    LLOC    CCN Func File    lines comment   blank"
+  echo "total     avg total     avg    avg  cnt  cnt    total   total   total"
   echo "------------------------------------------------------------------------------"
   set --
   if [ "$file_count" -gt 0 ]; then
     # shellcheck disable=SC2046
-    set -- "$sloc_total_all" "$lloc_total_all" $(
+    set --  $(
       {
         echo "scale=2"
+        echo "$nloc_total_all"
+        echo "$nloc_total_all / $func_count_all"
+        echo "$lloc_total_all"
         echo "$lloc_total_all / $func_count_all"
         echo "$ccn_total_all / $func_count_all"
       } | bc
     ) "$func_count_all" "$file_count" &&:
   fi
-  printf '%6d   %6d %9.2f %7.2f  %5d  %5d\n' "$@"
+  printf '%5d %7.2f %5d %7.2f %6.2f %4d %4d  %7d %7d %7d\n' "$@"
   echo "------------------------------------------------------------------------------"
 }
 
