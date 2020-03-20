@@ -20,6 +20,8 @@ Usage: shellmetrics [options] files...
 HERE
 }
 
+[ "${ZSH_VERSION:-}" ] && setopt shwordsplit
+
 MARK="@SHELLMATRICS_LINENO@"
 SP=$(printf ' \t') && TAB=${SP#?}
 
@@ -227,7 +229,7 @@ parse() {
 analyze() {
   ccn=1 lloc=0 func_array_last=0
   array indent func ccn lloc
-  echo "$2" 0 "<begin>" "$1"
+  echo 0 0 "<begin>" "$1|${2:-0}:${3:-0}:${4:-0}"
   while IFS="|" read -r indent mark line; do
     case $mark in (*"~"*)
       continue
@@ -256,7 +258,7 @@ analyze() {
     esac
   done
   echo "$lloc" "$ccn" "<main>" "$1"
-  echo "$2" 0 "<end>" "$1"
+  echo 0 0 "<end>" "$1|${2:-0}:${3:-0}:${4:-0}"
 }
 
 report() {
@@ -272,7 +274,9 @@ report() {
       continue
     fi
     if [ "$func" = "<end>" ]; then
-      sloc_total=$lloc
+      file_metrics=${file##*"|"} && file=${file%"|"*}
+      IFS=:$IFS && set -- $file_metrics && IFS=${IFS#?}
+      sloc_total=$1
       push_array lloc_total ccn_total func_count file sloc_total
       continue
     fi
@@ -346,7 +350,9 @@ main() {
     [ ! -f "$file" ] && error "'$file' is not a file." && continue
     lines=0 comment_lines=0 blank_lines=0 max_indent=0 filepath=$file
     count lines comment_lines blank_lines max_indent < "$file"
-    process "$max_indent" < "$file" | analyze "$filepath" "$lines"
+    process "$max_indent" < "$file" | {
+      analyze "$filepath" "$lines" "$comment_lines" "$blank_lines"
+    }
   done | report
 }
 

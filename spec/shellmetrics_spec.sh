@@ -245,7 +245,7 @@ Describe "peel()"
 End
 
 Describe "analyze()"
-  _analyze() { process 10 | analyze file 0; }
+  _analyze() { process 10 | analyze file; }
 
   Example
     Data
@@ -344,18 +344,18 @@ End
 
 Describe "report()"
   Data
-    #|123 0 <begin> script1.sh
+    #|0 0 <begin> script1.sh|123
     #|1 7 func1:10 script1.sh
     #|2 11 func2:20 script1.sh
     #|3 13 func3:30 script1.sh
-    #|123 0 <end> script1.sh
-    #|456 0 <begin> script2.sh
+    #|0 0 <end> script1.sh|123
+    #|0 0 <begin> script2.sh|456
     #|4 17 func4:40 script2.sh
     #|5 19 func5:50 script2.sh
     #|6 23 func6:60 script2.sh
     #|7 29 func7:70 script2.sh
     #|8 31 func8:80 script2.sh
-    #|456 0 <end> script2.sh
+    #|0 0 <end> script2.sh|456
   End
 
   result() {
