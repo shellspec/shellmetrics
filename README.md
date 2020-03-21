@@ -2,8 +2,9 @@
 
 ShellMetrics is Cyclomatic Complexity Analyzer for shell script.
 
-[![Travis CI](https://img.shields.io/travis/com/shellspec/shellmetrics/master.svg?label=TravisCI&style=flat-square)](https://travis-ci.com/shellspec/shellmetrics)
-[![Coveralls](https://img.shields.io/coveralls/github/shellspec/shellmetrics.svg?label=Coveralls&style=flat-square)](https://coveralls.io/github/shellspec/shellmetrics?branch=master)
+[![Travis CI](https://img.shields.io/travis/com/shellspec/shellmetrics/master.svg)](https://travis-ci.com/shellspec/shellmetrics)
+[![Coveralls](https://img.shields.io/coveralls/github/shellspec/shellmetrics.svg)](https://coveralls.io/github/shellspec/shellmetrics?branch=master)
+[![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/shellspec/shellmetrics)](https://www.codefactor.io/repository/github/shellspec/shellmetrics)
 
 ## Requirements
 
