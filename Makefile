@@ -7,7 +7,7 @@ test:
 	if type yash; then shellspec -s yash --no-quick; fi
 
 check:
-	shellcheck shellmetrics spec/shellmetrics_spec.sh
+	shellcheck shellmetrics spec/*.sh
 
 coveralls:
 	docker run -it -v "$(PWD):/src" shellspec/shellspec:kcov \
