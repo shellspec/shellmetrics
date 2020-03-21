@@ -474,7 +474,12 @@ SH=bash MODE=default PARAMS=''
 ${__SOURCED__:+return}
 
 parse_options "$@"
-[ "$SH" = "-" ] || exec $SH "$0" "$@" --shell -
+if [ "$SH" != "-" ]; then
+  type "$SH" 1>/dev/null 2>&1 || abort "'$SH' not found."
+  { pid=$($SH -c "echo \$PPID") ||:; } 2>/dev/null
+  [ "$pid" = $$ ] || abort "It seems not a shell."
+  exec $SH "$0" "$@" --shell -
+fi
 eval "set -- $PARAMS"
 
 __ main __

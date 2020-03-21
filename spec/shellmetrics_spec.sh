@@ -562,8 +562,20 @@ End
 Describe "./shellmetrics"
   Describe "--shell"
     It "outputs version"
-      When run script ./shellmetrics --shell echo
-      The output should end with  "--shell -"
+      When run script ./shellmetrics --shell spec/fake-shell.sh
+      The output should eq "fake-shell"
+    End
+
+    It "outputs error when specified not shell"
+      When run script ./shellmetrics --shell /bin/echo
+      The error should eq "It seems not a shell."
+      The status should be failure
+    End
+
+    It "outputs error when specified path not found"
+      When run script ./shellmetrics --shell /shellmetrics/no-such-a-file
+      The error should eq "'/shellmetrics/no-such-a-file' not found."
+      The status should be failure
     End
   End
 
