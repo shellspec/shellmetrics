@@ -327,15 +327,14 @@ default_report() {
 
     # shellcheck disable=SC2046
     set -- $(
-      {
-        echo "scale=2"
-        echo "$nloc_total"
-        echo "$nloc_total / $func_count"
-        echo "$lloc_total"
-        echo "$lloc_total / $func_count"
-        echo "$ccn_total / $func_count"
-        echo "$func_count"
-      } | bc
+      awk "BEGIN{ \
+        print $nloc_total; \
+        print $nloc_total / $func_count; \
+        print $lloc_total; \
+        print $lloc_total / $func_count; \
+        print $ccn_total / $func_count; \
+        print $func_count; \
+      }"
     ) "$file" "$lines_total" "$comment_total" "$blank_total" &&:
     printf '%5d %7.2f %5d %7.2f %6.2f %4d %s (%d:%d:%d)\n' "$@"
   done
@@ -351,20 +350,19 @@ default_report() {
   if [ "$file_count" -gt 0 ]; then
     # shellcheck disable=SC2046
     set --  $(
-      {
-        echo "scale=2"
-        echo "$nloc_total_all"
-        echo "$nloc_total_all / $func_count_all"
-        echo "$lloc_total_all"
-        echo "$lloc_total_all / $func_count_all"
-        echo "$ccn_total_all / $func_count_all"
-        echo "$func_count_all"
-        echo "$file_count"
-        echo "$lines_total_all"
-        echo "$comment_total_all"
-        echo "$blank_total_all"
-      } | bc
-    ) &&:
+      awk "BEGIN{ \
+        print $nloc_total_all; \
+        print $nloc_total_all / $func_count_all; \
+        print $lloc_total_all; \
+        print $lloc_total_all / $func_count_all; \
+        print $ccn_total_all / $func_count_all; \
+        print $func_count_all; \
+        print $file_count; \
+        print $lines_total_all; \
+        print $comment_total_all; \
+        print $blank_total_all; \
+      }"
+    )
   fi
   printf '%5d %7.2f %5d %7.2f %6.2f %4d %4d  %7d %7d %7d\n' "$@"
   echo "------------------------------------------------------------------------------"
