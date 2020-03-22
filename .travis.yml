@@ -5,14 +5,11 @@ addons:
   apt:
     update: true
     packages: [bash, mksh, yash, zsh, shellcheck]
-  homebrew:
-    update: true
-    packages: [shellcheck]
 jobs:
   include:
     - os: linux
       dist: bionic
-      env: COVERAGE=1
+      env: COVERAGE=1 SHELLCHECK=1
       services: docker
     - os: osx
       osx_image: xcode11.3
@@ -20,6 +17,6 @@ jobs:
 before_install:
   - curl -fsSL https://git.io/shellspec | sh -s master -y
 script:
-  - make test
-  - make check
+  - ./test.sh
+  - if [ "$SHELLCHECK" ]; then make check; fi
   - if [ "$COVERAGE" ]; then make coveralls; fi
