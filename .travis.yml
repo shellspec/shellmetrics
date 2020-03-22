@@ -16,6 +16,7 @@ jobs:
       services: docker
     - os: osx
       osx_image: xcode11.3
+    - os: windows
 before_install:
   - curl -fsSL https://git.io/shellspec | sh -s master -y
 script:
