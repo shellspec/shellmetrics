@@ -15,6 +15,7 @@ jobs:
       osx_image: xcode11.3
     - os: windows
 before_install:
+  - export PATH=$HOME/.local/bin:$PATH
   - curl -fsSL https://git.io/shellspec | sh -s master -y
 script:
   - ./test.sh
