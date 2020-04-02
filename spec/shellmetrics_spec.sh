@@ -406,7 +406,7 @@ Describe "default_report()"
     #|     7   29  func7:70 script2.sh
     #|     8   31  func8:80 script2.sh
     #|------------------------------------------------------------------------------
-    #| 2 file(s), 5 function(s) analyzed. [shell-version]
+    #| 2 file(s), 8 function(s) analyzed. [shell-version]
     #|
     #|==============================================================================
     #| NLOC    NLOC  LLOC    LLOC    CCN Func File (lines:comment:blank)
