@@ -276,7 +276,7 @@ default_report() {
   echo "=============================================================================="
   echo "  LLOC  CCN  Location"
   echo "------------------------------------------------------------------------------"
-  file_count=0 func_count=0
+  file_count=0 func_count_all=0
   array lloc_total ccn_total func_count file nloc_total
   array lines_total comment_total blank_total
   while IFS=" " read -r lloc ccn func file; do
@@ -298,10 +298,11 @@ default_report() {
     lloc_total=$((lloc_total + lloc))
     ccn_total=$((ccn_total + ccn))
     func_count=$((func_count + 1))
+    func_count_all=$((func_count_all + 1))
     printf '%6d %4d  %s %s\n' "$lloc" "$ccn" "$func" "$file"
   done
   echo "------------------------------------------------------------------------------"
-  set -- "$file_count" "$func_count" "$SHELL_VERSION"
+  set -- "$file_count" "$func_count_all" "$SHELL_VERSION"
   printf " %d file(s), %d function(s) analyzed. [%s]\n" "$@"
 
   echo
