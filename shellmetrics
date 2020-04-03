@@ -23,7 +23,7 @@ HERE
 
 [ "${ZSH_VERSION:-}" ] && setopt shwordsplit
 
-MARK="@SHELLMATRICS_LINENO@"
+MARK="@SHELLMETRICS_LINENO@"
 SP=$(printf ' \t') && TAB=${SP#?}
 
 SHELL_VERSION='' INDENT="$TAB"
