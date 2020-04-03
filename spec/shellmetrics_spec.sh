@@ -33,7 +33,7 @@ Describe "mark()"
     "echo & ()"         "echo & ()"
   End
 
-  _mark() { echo "$1" | mark; }
+  _mark() { echo "$1" | mark "$MARK"; }
 
   It "marks tag for line number"
     When call _mark "$1"

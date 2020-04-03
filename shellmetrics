@@ -151,7 +151,7 @@ pretty() {
   while [ "$i" -lt "$1" ] && i=$((i + 1)); do
     echo 'shellmetrics_wrapper() {'
   done
-  mark | awk "{i++; gsub(/$MARK/,i); print}"
+  mark "$MARK" | awk "{i++; gsub(/$MARK/,i); print}"
   while [ "$i" -gt 0 ] && i=$((i - 1)); do
     echo '}'
   done
@@ -161,10 +161,10 @@ pretty() {
 
 mark() {
   sed " \
-    s/\([^[:space:]\$'\"();&|<>=@!*?+]\)\( *()\)/\1_L$MARK\2/g; \
-    s/^[[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L$MARK/g; \
-    s/[;&|(][[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L$MARK/g; \
-    s/_L${MARK}_L${MARK}/_L${MARK}/g \
+    s/\([^[:space:]\$'\"();&|<>=@!*?+]\)\( *()\)/\1_L${1}\2/g; \
+    s/^[[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L${1}/g; \
+    s/[;&|(][[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L${1}/g; \
+    s/_L${1}_L${1}/_L${1}/g \
   "
 }
 
