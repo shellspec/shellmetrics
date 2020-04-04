@@ -10,6 +10,38 @@ Describe "proxy()"
   End
 End
 
+Describe "mark()"
+  Parameters
+    "foo()"             "foo_L$MARK()"
+    "foo ()"            "foo_L$MARK ()"
+    "function foo"      "function foo_L$MARK"
+    "function foo()"    "function foo_L$MARK()"
+    "nofunction foo"    "nofunction foo"
+    "echo function foo" "echo function foo"
+    "echo;function foo" "echo;function foo_L$MARK"
+    "a=()"              "a=()"
+    "<()"               "<()"
+    ">()"               ">()"
+    "@()"               "@()"
+    "!()"               "!()"
+    "*()"               "*()"
+    "?()"               "?()"
+    "+()"               "+()"
+    " ()"               " ()"
+    "echo; ()"          "echo; ()"
+    "echo | ()"         "echo | ()"
+    "echo & ()"         "echo & ()"
+    "f()();function g"  "f_L$MARK()();function g_L$MARK"
+  End
+
+  _mark() { echo "$1" | mark "$MARK"; }
+
+  It "marks tag for line number"
+    When call _mark "$1"
+    The output should eq "$2"
+  End
+End
+
 Describe "putsn()"
   It "puts string"
     When call putsn "test"

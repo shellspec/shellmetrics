@@ -23,7 +23,7 @@ HERE
 
 [ "${ZSH_VERSION:-}" ] && setopt shwordsplit
 
-MARK="@SHELLMATRICS_LINENO@"
+MARK="@SHELLMETRICS_LINENO@"
 SP=$(printf ' \t') && TAB=${SP#?}
 
 SHELL_VERSION='' INDENT="$TAB"
@@ -151,13 +151,21 @@ pretty() {
   while [ "$i" -lt "$1" ] && i=$((i + 1)); do
     echo 'shellmetrics_wrapper() {'
   done
-  sed "s/\([^\$'\"()]\)\( *()\)/\1_L$MARK\2/g" \
-  | awk "{i++; gsub(/$MARK/,i); print}"
+  mark "$MARK" | awk "{i++; gsub(/$MARK/,i); print}"
   while [ "$i" -gt 0 ] && i=$((i - 1)); do
     echo '}'
   done
   echo "typeset -fp shellmetrics_wrapper 2>/dev/null" \
     "|| typeset -f shellmetrics_wrapper"
+}
+
+mark() {
+  sed " \
+    s/\([^[:space:]\$'\"();&|<>=@!*?+]\)\([[:space:]]*([[:space:]]*)\)/\1_L${1}\2/g; \
+    s/^[[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L${1}/g; \
+    s/[;&|(][[:space:]]*function[[:space:]]\{1,\}[^[:space:]\$'\"();&|<>]\{1,\}/&_L${1}/g; \
+    s/_L${1}_L${1}/_L${1}/g \
+  "
 }
 
 process() {
@@ -262,7 +270,8 @@ analyze() {
 
     case $mark in (*"f"*)
       func=${line%"()"*} && func=${func%" "} && func=${func##*[$SP]}
-      lineno=${func##*_L} && func=${func%_L*}:$lineno
+      lineno=${func##*_L}
+      [ "$lineno" != "$func" ] && func=${func%_L*}:$lineno
       push_array indent func ccn lloc
       ccn=1 lloc=0
     esac
