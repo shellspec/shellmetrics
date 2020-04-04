@@ -31,6 +31,7 @@ Describe "mark()"
     "echo; ()"          "echo; ()"
     "echo | ()"         "echo | ()"
     "echo & ()"         "echo & ()"
+    "f()();function g"  "f_L$MARK()();function g_L$MARK"
   End
 
   _mark() { echo "$1" | mark "$MARK"; }
