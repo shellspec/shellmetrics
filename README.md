@@ -107,3 +107,10 @@ total     avg total     avg    avg  cnt  cnt    total   total   total
   412   12.48   332   10.06   3.18   33    1      479       5      62
 ------------------------------------------------------------------------------
 ```
+
+## Contribution
+
+### How to test
+
+ShellMetrics tested by [ShellSpec](https://github.com/shellspec/shellspec).
+To test, install ShellSpec and run `spellspec` on the project root directory.
