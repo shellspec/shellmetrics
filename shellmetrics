@@ -136,7 +136,7 @@ shift_array() {
 is_empty_file() {
   while IFS= read -r line; do
     line=${line%%#*}
-    case $line in (*[!$SP$TAB]*) return 1; esac
+    case $line in (*[!${SP}${TAB}]*) return 1; esac
   done
 }
 

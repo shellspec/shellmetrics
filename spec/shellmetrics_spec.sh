@@ -86,6 +86,7 @@ Describe "is_comment_line()"
   Parameters
     "# comment"           success
     "   # comment"        success
+    " $TAB  # comment"    success
     "    "                failure
     "  code # comment  "  failure
   End
@@ -100,6 +101,7 @@ Describe "is_blank_line()"
   Parameters
     ""          success
     " "         success
+    "$TAB"      success
     " code "    failure
   End
 
@@ -252,9 +254,10 @@ End
 
 Describe "is_empty_file()"
   Context "when file is empty"
-    Data
+    Data:expand
       #|#!/bin/sh
       #|  #
+      #|$TAB#
     End
 
     It "checks file is empty"
@@ -264,9 +267,10 @@ Describe "is_empty_file()"
   End
 
   Context "when file is not empty"
-    Data
+    Data:expand
       #|#!/bin/sh
       #|  #
+      #|$TAB#
       #| :
     End
 
