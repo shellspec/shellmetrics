@@ -133,6 +133,13 @@ shift_array() {
   done
 }
 
+is_empty_file() {
+  while IFS= read -r line; do
+    line=${line%%#*}
+    case $line in (*[!$SP$TAB]*) return 1; esac
+  done
+}
+
 peel() {
   i=0
   while [ "$i" -lt "$1" ] && i=$((i + 1)); do
@@ -428,6 +435,7 @@ main() {
 
   for file in "$@"; do
     [ ! -f "$file" ] && error "'$file' is not a file." && continue
+    is_empty_file < "$file" && continue
     lines=0 comment_lines=0 blank_lines=0 max_indent=0 filepath=$file
     count lines comment_lines blank_lines max_indent < "$file"
     process "$max_indent" < "$file" | {

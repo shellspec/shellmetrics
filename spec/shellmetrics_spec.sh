@@ -250,6 +250,33 @@ Describe "array"
   End
 End
 
+Describe "is_empty_file()"
+  Context "when file is empty"
+    Data
+      #|#!/bin/sh
+      #|  #
+    End
+
+    It "checks file is empty"
+      When call is_empty_file
+      The status should be success
+    End
+  End
+
+  Context "when file is not empty"
+    Data
+      #|#!/bin/sh
+      #|  #
+      #| :
+    End
+
+    It "checks file is not empty"
+      When call is_empty_file
+      The status should be failure
+    End
+  End
+End
+
 Describe "peel()"
   Context "when bash format"
     Data
