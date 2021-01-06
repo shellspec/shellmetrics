@@ -342,19 +342,15 @@ default_report() {
     comment_total_all=$((comment_total_all + comment_total))
     blank_total_all=$((blank_total_all + blank_total))
 
-    # shellcheck disable=SC2046
-    set -- $(
-      awk "BEGIN{ \
-        print $nloc_total; \
-        print $nloc_total / $func_count; \
-        print $lloc_total; \
-        print $lloc_total / $func_count; \
-        print $ccn_total / $func_count; \
-        print $func_count; \
-      }"
-    ) "$file" "$lines_total" "$comment_total" "$blank_total" &&:
-    printf '%5d %7.2f %5d %7.2f %6.2f %4d %s (%d:%d:%d)\n' "$@"
+    awk -v file="$file" "BEGIN { \
+      printf \"%5d %7.2f %5d %7.2f %6.2f %4d %s (%d:%d:%d)\\n\", \
+      $nloc_total, ($nloc_total / $func_count), \
+      $lloc_total, ($lloc_total / $func_count), \
+      ($ccn_total / $func_count), \
+      $func_count, file, $lines_total, $comment_total, $blank_total \
+    }"
   done
+
   echo "------------------------------------------------------------------------------"
 
   echo
@@ -363,25 +359,15 @@ default_report() {
   echo " NLOC    NLOC  LLOC    LLOC    CCN Func File    lines comment   blank"
   echo "total     avg total     avg    avg  cnt  cnt    total   total   total"
   echo "------------------------------------------------------------------------------"
-  set --
-  if [ "$file_count" -gt 0 ]; then
-    # shellcheck disable=SC2046
-    set --  $(
-      awk "BEGIN{ \
-        print $nloc_total_all; \
-        print $nloc_total_all / $func_count_all; \
-        print $lloc_total_all; \
-        print $lloc_total_all / $func_count_all; \
-        print $ccn_total_all / $func_count_all; \
-        print $func_count_all; \
-        print $file_count; \
-        print $lines_total_all; \
-        print $comment_total_all; \
-        print $blank_total_all; \
-      }"
-    )
-  fi
-  printf '%5d %7.2f %5d %7.2f %6.2f %4d %4d  %7d %7d %7d\n' "$@"
+  # func_count_all: to avoid "fatal: division by zero attempted"
+  awk -v func_count_all=$((func_count_all == 0 ? 1 : func_count_all)) "BEGIN { \
+    printf \"%5d %7.2f %5d %7.2f %6.2f %4d %4d  %7d %7d %7d\\n\", \
+    $nloc_total_all, ($nloc_total_all / func_count_all), \
+    $lloc_total_all, ($lloc_total_all / func_count_all), \
+    $ccn_total_all / func_count_all, \
+    $func_count_all, $file_count, \
+    $lines_total_all, $comment_total_all, $blank_total_all \
+  }"
   echo "------------------------------------------------------------------------------"
 }
 
