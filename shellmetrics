@@ -4,7 +4,7 @@ test || eval "__() { :; }"
 
 set -eu
 
-VERSION=0.5.0
+VERSION=0.5.1
 
 usage() {
 cat<<HERE
