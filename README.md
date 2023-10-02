@@ -108,6 +108,19 @@ total     avg total     avg    avg  cnt  cnt    total   total   total
 ------------------------------------------------------------------------------
 ```
 
+## To use as a pre-commit hook
+
+To use ShellMetrics with [pre-commit](https://pre-commit.com/), you can add the
+following to your `.pre-commit-config.yaml` file:
+
+```yaml
+repos:
+  - repo: https://github.com/shellspec/shellmetrics
+    rev: master  # or any specific git ref
+    hooks:
+      - id: shellmetrics
+```
+
 ## Contribution
 
 ### How to test
