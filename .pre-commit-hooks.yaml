@@ -1,0 +1,7 @@
+---
+- id: shellmetrics
+  name: ShellMetrics
+  description: "A shell script metrics calculator"
+  entry: ./shellmetrics
+  language: script
+  types: [shell]
